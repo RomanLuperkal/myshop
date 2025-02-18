@@ -18,7 +18,9 @@
             <column name="description" type="VARCHAR">
                 <constraints nullable="false"/>
             </column>
-            <column name="count" type="bigint"/>
+            <column name="count" type="bigint">
+                <constraints nullable="false"/>
+            </column>
             <column name="price" type="NUMERIC(19, 2)">
                 <constraints nullable="false"/>
             </column>
