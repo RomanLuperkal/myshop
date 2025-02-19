@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Витрина товаров</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-card {
+            transition: transform 0.2s;
+        }
+        .product-card:hover {
+            transform: scale(1.05);
+        }
+        .pagination-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <!-- Строка поиска и фильтрации -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <input type="text" class="form-control" id="search" placeholder="Поиск по названию/описанию товара"
+                   th:value="${param.search}" name="search">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="page-size" name="size">
+                <option value="10" th:selected="${param.size == 10}">10 товаров на странице</option>
+                <option value="20" th:selected="${param.size == 20}">20 товаров на странице</option>
+                <option value="50" th:selected="${param.size == 50}">50 товаров на странице</option>
+                <option value="100" th:selected="${param.size == 100}">100 товаров на странице</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="price-filter" name="priceSort">
+                <option value="">Сортировка по цене</option>
+                <option value="price,asc" th:selected="${param.priceSort == 'price,asc'}">От дешевых к дорогим</option>
+                <option value="price,desc" th:selected="${param.priceSort == 'price,desc'}">От дорогих к дешевым</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="alphabet-filter" name="alphabetSort">
+                <option value="">Сортировка по алфавиту</option>
+                <option value="productName,asc" th:selected="${param.alphabetSort == 'productName,asc'}">А-Я</option>
+                <option value="productName,desc" th:selected="${param.alphabetSort == 'productName,desc'}">Я-А</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Список товаров (плиткой) -->
+    <div class="row" id="product-list">
+        <div class="col-md-4 mb-4" th:each="product : ${products.content}">
+            <div class="card product-card">
+                <img th:src="${product.image}" class="card-img-top" alt="Изображение товара">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${product.productName}">Название товара</h5>
+                    <p class="card-text">Цена: <strong th:text="${product.price} + ' ₽'">1000 ₽</strong></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary" th:onclick="'addToCart(' + ${product.productId} + ')'">Добавить в корзину</button>
+                            <button class="btn btn-sm btn-outline-danger" th:onclick="'removeFromCart(' + ${product.productId} + ')'">Удалить из корзины</button>
+                        </div>
+                        <div class="input-group input-group-sm" style="width: 100px;">
+                            <button class="btn btn-outline-secondary" th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
+                            <input type="text" class="form-control text-center" value="1" readonly>
+                            <button class="btn btn-outline-secondary" th:onclick="'increaseQuantity(' + ${product.productId} + ')'">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Пагинация -->
+    <div class="pagination-container">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${products.first} ? 'disabled'">
+                    <a class="page-link" th:href="@{/products(page=${products.number - 1}, size=${param.size}, sort=${param.sort}, search=${param.search})}"
+                       tabindex="-1" aria-disabled="true">Предыдущая</a>
+                </li>
+                <li class="page-item" th:each="pageNumber : ${#numbers.sequence(1, products.totalPages)}"
+                    th:classappend="${pageNumber == products.number + 1} ? 'active'">
+                    <a class="page-link"
+                       th:href="@{/products(page=${pageNumber - 1}, size=${param.size}, sort=${param.sort}, search=${param.search})}"
+                       th:text="${pageNumber}"></a>
+                </li>
+                <li class="page-item" th:classappend="${products.last} ? 'disabled'">
+                    <a class="page-link" th:href="@{/products(page=${products.number + 1}, size=${param.size}, sort=${param.sort}, search=${param.search})}">Следующая</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Кнопка "Применить фильтры" -->
+<div class="col-md-12 mt-3">
+    <button class="btn btn-primary" onclick="applyFilters()">Применить фильтры</button>
+</div>
+
+<!-- Подключение Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Пример функций для работы с корзиной и количеством товаров
+    function addToCart(productId) {
+        alert(`Товар с ID ${productId} добавлен в корзину`);
+    }
+
+    function removeFromCart(productId) {
+        alert(`Товар с ID ${productId} удален из корзины`);
+    }
+
+    function increaseQuantity(productId) {
+        const input = document.querySelector(`input[readonly][value]`);
+        input.value = parseInt(input.value) + 1;
+    }
+
+    function decreaseQuantity(productId) {
+        const input = document.querySelector(`input[readonly][value]`);
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+        }
+    }
+
+    function applyFilters() {
+        // Собираем значения фильтров
+        const search = document.getElementById('search').value;
+        const size = document.getElementById('page-size').value;
+
+        // Собираем значения сортировки
+        const priceSort = document.getElementById('price-filter').value;
+        const alphabetSort = document.getElementById('alphabet-filter').value;
+        console.log('search:'  + search);
+        console.log('size:'  + size);
+        console.log('priceSort:'  + priceSort);
+        console.log('alphabetSort:'  + alphabetSort);
+
+        // Определяем, какой фильтр сортировки применить
+        const sort = priceSort || alphabetSort || '';
+
+        // Формируем новый URL с учетом параметров
+        let url = `/products?page=0&size=${size}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (sort) url += `&sort=${encodeURIComponent(sort)}`;
+
+        // Перезагружаем страницу с новыми параметрами
+        window.location.href = url;
+    }
+</script>
+</body>
+</html>

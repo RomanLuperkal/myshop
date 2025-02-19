@@ -4,20 +4,19 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.product.dto.ProductCreateDto;
 import org.ivanov.myshop.product.service.ProductService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/product")
+@RequestMapping("/products")
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
 
-    @GetMapping
+    @GetMapping("/create")
     public String createProductForm(@ModelAttribute("product") ProductCreateDto productCreateDto) {
         return "create-product";
     }
@@ -29,5 +28,11 @@ public class ProductController {
         }
         productService.createProduct(productCreateDto);
         return "redirect:/product";
+    }
+
+    @GetMapping
+    public String getProducts(Pageable pageable, Model model) {
+        model.addAttribute("products", productService.getProducts(pageable));
+        return "product-list";
     }
 }
