@@ -7,6 +7,7 @@ import org.ivanov.myshop.product.mapper.ProductMapper;
 import org.ivanov.myshop.product.model.Product;
 import org.ivanov.myshop.product.repository.ProductRepository;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,7 +22,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ListProductDto getProducts(Pageable pageable) {
-        return productMapper.maptoListProductDto(productRepository.findAll(pageable));
+    public ListProductDto getProducts(Pageable pageable, String search) {
+        Specification<Product> spec = (root, query, criteriaBuilder) -> {
+            if (search == null || search.isBlank()) {
+                return null;
+            }
+            return criteriaBuilder.like(root.get("productName"), "%" + search + "%");
+        };
+        return productMapper.maptoListProductDto(productRepository.findAll(spec, pageable));
     }
 }

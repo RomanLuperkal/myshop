@@ -16,37 +16,61 @@
         .pagination-container {
             margin-top: 20px;
         }
+        .filter-section {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Расстояние между элементами */
+        }
+        .filter-section button {
+            white-space: nowrap; /* Предотвращает перенос текста на кнопке */
+        }
     </style>
 </head>
 <body>
 <div class="container mt-4">
     <!-- Строка поиска и фильтрации -->
     <div class="row mb-4">
-        <div class="col-md-6">
-            <input type="text" class="form-control" id="search" placeholder="Поиск по названию/описанию товара"
-                   th:value="${param.search}" name="search">
-        </div>
-        <div class="col-md-3">
-            <select class="form-select" id="page-size" name="size">
-                <option value="10" th:selected="${param.size == 10}">10 товаров на странице</option>
-                <option value="20" th:selected="${param.size == 20}">20 товаров на странице</option>
-                <option value="50" th:selected="${param.size == 50}">50 товаров на странице</option>
-                <option value="100" th:selected="${param.size == 100}">100 товаров на странице</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select class="form-select" id="price-filter" name="priceSort">
-                <option value="">Сортировка по цене</option>
-                <option value="price,asc" th:selected="${param.priceSort == 'price,asc'}">От дешевых к дорогим</option>
-                <option value="price,desc" th:selected="${param.priceSort == 'price,desc'}">От дорогих к дешевым</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select class="form-select" id="alphabet-filter" name="alphabetSort">
-                <option value="">Сортировка по алфавиту</option>
-                <option value="productName,asc" th:selected="${param.alphabetSort == 'productName,asc'}">А-Я</option>
-                <option value="productName,desc" th:selected="${param.alphabetSort == 'productName,desc'}">Я-А</option>
-            </select>
+        <div class="col-md-12">
+            <div class="filter-section">
+                <!-- Поле поиска -->
+                <div class="flex-grow-1">
+                    <input type="text" class="form-control" id="search" placeholder="Поиск по названию/описанию товара"
+                           th:value="${param.search}" name="search">
+                </div>
+
+                <!-- Выбор количества товаров на странице -->
+                <div>
+                    <select class="form-select" id="page-size" name="size">
+                        <option value="10" th:selected="${param.size == 10}">10 товаров</option>
+                        <option value="20" th:selected="${param.size == 20}">20 товаров</option>
+                        <option value="50" th:selected="${param.size == 50}">50 товаров</option>
+                        <option value="100" th:selected="${param.size == 100}">100 товаров</option>
+                    </select>
+                </div>
+
+                <!-- Сортировка по цене -->
+                <div>
+                    <select class="form-select" id="price-filter" name="priceSort">
+                        <option value="" th:selected="${#lists.isEmpty(param.sort) or param.sort == null}">Сортировка по цене</option>
+                        <option value="price,asc" th:selected="${param.sort != null and #lists.contains(param.sort, 'price,asc')}">От дешевых к дорогим</option>
+                        <option value="price,desc" th:selected="${param.sort != null and #lists.contains(param.sort, 'price,desc')}">От дорогих к дешевым</option>
+                    </select>
+                </div>
+
+                <!-- Сортировка по алфавиту -->
+                <div>
+                    <select class="form-select" id="alphabet-filter" name="alphabetSort">
+                        <option value="" th:selected="${#lists.isEmpty(param.sort) or param.sort == null}">Сортировка по алфавиту</option>
+                        <option value="productName,asc" th:selected="${param.sort != null and #lists.contains(param.sort, 'productName,asc')}">А-Я</option>
+                        <option value="productName,desc" th:selected="${param.sort != null and #lists.contains(param.sort, 'productName,desc')}">Я-А</option>
+                    </select>
+                </div>
+
+                <!-- Кнопка "Применить фильтры" -->
+                <div>
+                    <button class="btn btn-primary" onclick="applyFilters()">Применить фильтры</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -96,11 +120,6 @@
     </div>
 </div>
 
-<!-- Кнопка "Применить фильтры" -->
-<div class="col-md-12 mt-3">
-    <button class="btn btn-primary" onclick="applyFilters()">Применить фильтры</button>
-</div>
-
 <!-- Подключение Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -108,45 +127,28 @@
     function addToCart(productId) {
         alert(`Товар с ID ${productId} добавлен в корзину`);
     }
-
     function removeFromCart(productId) {
         alert(`Товар с ID ${productId} удален из корзины`);
     }
-
     function increaseQuantity(productId) {
         const input = document.querySelector(`input[readonly][value]`);
         input.value = parseInt(input.value) + 1;
     }
-
     function decreaseQuantity(productId) {
         const input = document.querySelector(`input[readonly][value]`);
         if (parseInt(input.value) > 1) {
             input.value = parseInt(input.value) - 1;
         }
     }
-
     function applyFilters() {
-        // Собираем значения фильтров
         const search = document.getElementById('search').value;
         const size = document.getElementById('page-size').value;
-
-        // Собираем значения сортировки
         const priceSort = document.getElementById('price-filter').value;
         const alphabetSort = document.getElementById('alphabet-filter').value;
-        console.log('search:'  + search);
-        console.log('size:'  + size);
-        console.log('priceSort:'  + priceSort);
-        console.log('alphabetSort:'  + alphabetSort);
-
-        // Определяем, какой фильтр сортировки применить
-        const sort = priceSort || alphabetSort || '';
-
-        // Формируем новый URL с учетом параметров
         let url = `/products?page=0&size=${size}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
-        if (sort) url += `&sort=${encodeURIComponent(sort)}`;
-
-        // Перезагружаем страницу с новыми параметрами
+        if (priceSort) url += `&sort=${encodeURIComponent(priceSort)}`;
+        if (alphabetSort) url += `&sort=${encodeURIComponent(alphabetSort)}`;
         window.location.href = url;
     }
 </script>

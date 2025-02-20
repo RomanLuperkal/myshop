@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.product.dto.ProductCreateDto;
 import org.ivanov.myshop.product.service.ProductService;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -31,8 +32,8 @@ public class ProductController {
     }
 
     @GetMapping
-    public String getProducts(Pageable pageable, Model model) {
-        model.addAttribute("products", productService.getProducts(pageable));
+    public String getProducts(@PageableDefault Pageable pageable, Model model, @RequestParam(required = false) String search) {
+        model.addAttribute("products", productService.getProducts(pageable, search));
         return "product-list";
     }
 }
