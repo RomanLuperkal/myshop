@@ -1,4 +1,4 @@
-package org.ivanov.myshop.curt.enums;
+package org.ivanov.myshop.cart.enums;
 
 public enum Status {
     CREATED, DONE

@@ -1,23 +1,23 @@
-package org.ivanov.myshop.curt_items.model;
+package org.ivanov.myshop.cart_item.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.ivanov.myshop.curt.model.Curt;
+import org.ivanov.myshop.cart.model.Cart;
 import org.ivanov.myshop.product.model.Product;
 
 @Entity
-@Table(name = "curt_items")
+@Table(name = "cart_items")
 @Getter
 @Setter
-public class CurtItems {
+public class CartItems {
     @Id
     @Column(name = "curt_item_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long curtItemId;
     @ManyToOne
     @JoinColumn(name = "curt_id")
-    private Curt curt;
+    private Cart cart;
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;

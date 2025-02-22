@@ -9,7 +9,7 @@
     </changeSet>
 
     <include file="create-product.xml" relativeToChangelogFile="true"/>
-    <include file="create-curt.xml" relativeToChangelogFile="true"/>
-    <include file="create-curt-items.xml" relativeToChangelogFile="true"/>
+    <include file="create-cart.xml" relativeToChangelogFile="true"/>
+    <include file="create-cart-item.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

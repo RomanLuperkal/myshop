@@ -88,9 +88,13 @@
                             <button class="btn btn-sm btn-outline-danger" th:onclick="'removeFromCart(' + ${product.productId} + ')'">Удалить из корзины</button>
                         </div>
                         <div class="input-group input-group-sm" style="width: 100px;">
-                            <button class="btn btn-outline-secondary" th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
-                            <input type="text" class="form-control text-center" value="1" readonly>
-                            <button class="btn btn-outline-secondary" th:onclick="'increaseQuantity(' + ${product.productId} + ')'">+</button>
+                            <button class="btn btn-outline-secondary"
+                                    th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
+
+                            <input type="text" class="form-control text-center" value="1" th:id="'quantity-' + ${product.productId}" readonly >
+
+                            <button class="btn btn-outline-secondary"
+                                    th:onclick="'increaseQuantity(' + ${product.productId} + ')'">+</button>
                         </div>
                     </div>
                 </div>
@@ -123,21 +127,76 @@
 <!-- Подключение Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Пример функций для работы с корзиной и количеством товаров
     function addToCart(productId) {
-        alert(`Товар с ID ${productId} добавлен в корзину`);
+        const count = document.getElementById('quantity-' + productId);
+        const data = {
+            productId: productId,
+            count: parseInt(count.value)
+        };
+        const url = `carts/add`;
+        console.log(url);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.json().then(body => {
+                    if (!response.ok) {
+                        alert(body.message);
+                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
+                    }
+                    alert(body.message);
+                    return body;
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
     }
     function removeFromCart(productId) {
-        alert(`Товар с ID ${productId} удален из корзины`);
+        const count = document.getElementById('quantity-' + productId);
+        const data = {
+            productId: productId,
+            count: parseInt(count.value)
+        };
+        const url = `carts/delete`;
+        console.log(url);
+
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.json().then(body => {
+                    if (!response.ok) {
+                        alert(body.message);
+                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
+                    }
+                    alert(body.message);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
     }
+
     function increaseQuantity(productId) {
-        const input = document.querySelector(`input[readonly][value]`);
-        input.value = parseInt(input.value) + 1;
+        const input = document.getElementById('quantity-' + productId); // Находим поле ввода по уникальному ID
+        input.value = parseInt(input.value) + 1; // Увеличиваем значение на 1
     }
+
     function decreaseQuantity(productId) {
-        const input = document.querySelector(`input[readonly][value]`);
-        if (parseInt(input.value) > 1) {
-            input.value = parseInt(input.value) - 1;
+        const input = document.getElementById('quantity-' + productId);
+        let quantity = parseInt(input.value);
+        if (quantity > 1) {
+            input.value = quantity - 1;
         }
     }
     function applyFilters() {
