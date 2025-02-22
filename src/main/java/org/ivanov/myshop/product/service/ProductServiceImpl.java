@@ -1,13 +1,16 @@
 package org.ivanov.myshop.product.service;
 
 import lombok.RequiredArgsConstructor;
+import org.ivanov.myshop.handler.exception.ProductException;
 import org.ivanov.myshop.product.dto.ListProductDto;
 import org.ivanov.myshop.product.dto.ProductCreateDto;
+import org.ivanov.myshop.product.dto.ProductResponseDto;
 import org.ivanov.myshop.product.mapper.ProductMapper;
 import org.ivanov.myshop.product.model.Product;
 import org.ivanov.myshop.product.repository.ProductRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,5 +33,12 @@ public class ProductServiceImpl implements ProductService {
             return criteriaBuilder.like(root.get("productName"), "%" + search + "%");
         };
         return productMapper.maptoListProductDto(productRepository.findAll(spec, pageable));
+    }
+
+    @Override
+    public ProductResponseDto getProduct(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductException(HttpStatus.NOT_FOUND, "Продукта с id = " + productId + " не существует"));
+        return productMapper.productToProductResponseDto(product);
     }
 }

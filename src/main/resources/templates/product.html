@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карточка товара</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-description {
+            white-space: pre-wrap; /* Сохраняет переносы строк */
+            word-wrap: break-word; /* Переносит длинные слова */
+        }
+        .back-to-store {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Изображение товара -->
+            <img th:src="${product.image}" class="img-fluid rounded" alt="Изображение товара">
+        </div>
+        <div class="col-md-6">
+            <!-- Информация о товаре -->
+            <h1 th:text="${product.productName}">Название товара</h1>
+            <p class="lead">Цена: <strong th:text="${product.price} + ' ₽'">1000 ₽</strong></p>
+            <div class="product-description">
+                <p th:text="${product.description}">Описание товара...</p>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-secondary" th:onclick="'addToCart(' + ${product.productId} + ')'">Добавить в корзину</button>
+                    <button class="btn btn-sm btn-outline-danger" th:onclick="'removeFromCart(' + ${product.productId} + ')'">Удалить из корзины</button>
+                </div>
+                <div class="input-group input-group-sm" style="width: 100px;">
+                    <button class="btn btn-outline-secondary" th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
+                    <input type="text" class="form-control text-center" value="1" th:id="'quantity-' + ${product.productId}" readonly>
+                    <button class="btn btn-outline-secondary" th:onclick="'increaseQuantity(' + ${product.productId} + ')'">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Кнопка "Назад к витрине" -->
+<a href="/products" class="btn btn-primary back-to-store">Назад к витрине</a>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Функции для работы с корзиной (скопированы из вашего кода)
+    function addToCart(productId) {
+        const count = document.getElementById('quantity-' + productId);
+        const data = {
+            productId: productId,
+            count: parseInt(count.value)
+        };
+        const url = `/carts/add`;
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.json().then(body => {
+                    if (!response.ok) {
+                        alert(body.message);
+                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
+                    }
+                    alert(body.message);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    }
+
+    function removeFromCart(productId) {
+        const count = document.getElementById('quantity-' + productId);
+        const data = {
+            productId: productId,
+            count: parseInt(count.value)
+        };
+        const url = `/carts/delete`;
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.json().then(body => {
+                    if (!response.ok) {
+                        alert(body.message);
+                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
+                    }
+                    alert(body.message);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    }
+
+    function increaseQuantity(productId) {
+        const input = document.getElementById('quantity-' + productId);
+        input.value = parseInt(input.value) + 1;
+    }
+
+    function decreaseQuantity(productId) {
+        const input = document.getElementById('quantity-' + productId);
+        let quantity = parseInt(input.value);
+        if (quantity > 1) {
+            input.value = quantity - 1;
+        }
+    }
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@ package org.ivanov.myshop.product.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.product.dto.ProductCreateDto;
+import org.ivanov.myshop.product.dto.ProductResponseDto;
 import org.ivanov.myshop.product.service.ProductService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -35,5 +36,12 @@ public class ProductController {
     public String getProducts(@PageableDefault Pageable pageable, Model model, @RequestParam(required = false) String search) {
         model.addAttribute("products", productService.getProducts(pageable, search));
         return "product-list";
+    }
+
+    @GetMapping("/{productId}")
+    public String getProduct(@PathVariable Long productId, Model model) {
+        ProductResponseDto product = productService.getProduct(productId);
+        model.addAttribute("product", product);
+        return "product";
     }
 }
