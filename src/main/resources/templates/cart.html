@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Стиль для поля ввода */
+        .quantity-input {
+            text-align: center;
+            padding: 0.25rem 0.5rem; /* Уменьшаем отступы */
+            min-width: 40px; /* Минимальная ширина */
+            font-size: 1rem; /* Размер шрифта */
+            box-sizing: border-box; /* Учитываем padding при расчёте ширины */
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1>Корзина</h1>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Товар</th>
+            <th>Количество</th>
+            <th>Цена за единицу</th>
+            <th>Общая цена</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody id="cart-items">
+        <tr th:each="item : ${cart.cartItems}" th:data-product-id="${item.productId}">
+            <td th:text="${item.productName}">Товар</td>
+            <td>
+                <div class="input-group" style="width: 200px;">
+                    <button class="btn btn-outline-secondary decrease-btn">-</button>
+                    <input type="text" class="form-control text-center quantity-input" th:value="${item.count}" readonly>
+                    <button class="btn btn-outline-secondary increase-btn">+</button>
+                </div>
+            </td>
+            <td class="unit-price" th:text="${item.price} + ' ₽'">1000 ₽</td>
+            <td class="total-price" th:text="${item.price * item.count} + ' ₽'">1000 ₽</td>
+            <td>
+                <button class="btn btn-sm btn-outline-danger remove-btn">Удалить</button>
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3"><strong>Итого:</strong></td>
+            <td id="total-cart-price" th:text="${cart.totalPrice} + ' ₽'">0 ₽</td>
+            <td></td>
+        </tr>
+        </tfoot>
+    </table>
+    <div class="d-flex justify-content-between">
+        <a href="/products" class="btn btn-secondary">Продолжить покупки</a>
+        <button class="btn btn-success">Оформить заказ</button>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Функция для пересчёта общей цены корзины
+    function updateCartTotal() {
+        let total = 0;
+        document.querySelectorAll('#cart-items tr').forEach(row => {
+            const unitPrice = parseFloat(row.querySelector('.unit-price').innerText.replace(' ₽', ''));
+            const quantity = parseInt(row.querySelector('.quantity-input').value);
+            const totalPrice = unitPrice * quantity;
+            row.querySelector('.total-price').innerText = `${totalPrice} ₽`;
+            total += totalPrice;
+        });
+        document.getElementById('total-cart-price').innerText = `${total} ₽`;
+    }
+
+    // Обработчики событий для изменения количества
+    document.querySelectorAll('.increase-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const input = button.parentElement.querySelector('.quantity-input');
+            const productId = button.closest('tr').getAttribute('data-product-id');
+            const newCount = parseInt(input.value) + 1;
+
+            // Вызываем addToCart и обновляем input.value только при успешном ответе
+            addToCart(productId, 1).then(success => {
+                if (success) {
+                    input.value = newCount;
+                    updateCartTotal();
+                }
+            });
+        });
+    });
+
+    document.querySelectorAll('.decrease-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const input = button.parentElement.querySelector('.quantity-input');
+            const productId = button.closest('tr').getAttribute('data-product-id');
+            const currentCount = parseInt(input.value);
+
+            if (currentCount > 1) {
+                const newCount = currentCount - 1;
+
+                // Вызываем removeFromCart и обновляем input.value только при успешном ответе
+                removeFromCart(productId, 1).then(success => {
+                    if (success) {
+                        input.value = newCount;
+                        updateCartTotal();
+                    }
+                });
+            }
+        });
+    });
+
+    // Удаление товара из корзины
+    document.querySelectorAll('.remove-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const row = button.closest('tr');
+            const productId = row.getAttribute('data-product-id');
+
+            // Удаляем все единицы товара
+            removeProductFromCart(productId).then(success => {
+                if (success) {
+                    row.remove(); // Удаляем строку из DOM
+                    updateCartTotal(); // Пересчитываем итоговую сумму
+                }
+            });
+        });
+    });
+
+    // Функция для добавления товара в корзину
+    function addToCart(productId, count) {
+        const data = {
+            productId: productId,
+            count: count
+        };
+        const url = `/carts/add`;
+
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.json().then(body => {
+                    if (!response.ok) {
+                        alert(body.message || 'Ошибка при добавлении товара');
+                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
+                    }
+                    console.log(body.message); // Логируем успешное добавление
+                    return true; // Возвращаем true для успешного завершения
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                return false; // Возвращаем false в случае ошибки
+            });
+    }
+
+    // Функция для удаления товара из корзины
+    function removeFromCart(productId, count) {
+        const data = {
+            productId: productId,
+            count: count
+        };
+        const url = `/carts/deleteItem`;
+
+        return fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                return response.json().then(body => {
+                    if (!response.ok) {
+                        alert(body.message || 'Ошибка при удалении товара');
+                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
+                    }
+                    console.log(body.message); // Логируем успешное удаление
+                    return true; // Возвращаем true для успешного завершения
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                return false; // Возвращаем false в случае ошибки
+            });
+    }
+
+    function removeProductFromCart(productId) {
+        const url = `/carts/deleteProduct/` + productId;
+        return fetch(url, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(body => {
+                        alert(body.message || 'Ошибка при удалении товара');
+                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
+                    });
+                }
+
+                // Если статус 204 (No Content), просто возвращаем true
+                if (response.status === 204) {
+                    console.log('Товар успешно удален'); // Логируем успешное удаление
+                    return true;
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                return false; // Возвращаем false в случае ошибки
+            });
+    }
+
+    // Инициализация общей суммы при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCartTotal();
+    });
+</script>
+</body>
+</html>

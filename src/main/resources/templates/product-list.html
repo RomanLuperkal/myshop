@@ -24,9 +24,16 @@
         .filter-section button {
             white-space: nowrap; /* Предотвращает перенос текста на кнопке */
         }
+        .cart-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
     </style>
 </head>
 <body>
+
+<a href="/carts/actual" class="btn btn-primary cart-button">Перейти в корзину</a>
 <div class="container mt-4">
     <!-- Строка поиска и фильтрации -->
     <div class="row mb-4">
@@ -163,7 +170,7 @@
             productId: productId,
             count: parseInt(count.value)
         };
-        const url = `carts/delete`;
+        const url = `carts/deleteItem`;
         console.log(url);
 
         fetch(url, {

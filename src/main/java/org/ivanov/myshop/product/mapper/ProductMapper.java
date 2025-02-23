@@ -44,7 +44,6 @@ public interface ProductMapper {
         return multipartFile.getBytes();
     }
 
-    // Метод для маппинга списка Product в список ProductResponseDto
     default List<ProductResponseDto> mapToProductResponseDtoList(List<Product> products) {
         return products.stream()
                 .map(this::productToProductResponseDto)
