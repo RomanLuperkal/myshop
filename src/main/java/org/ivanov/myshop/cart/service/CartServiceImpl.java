@@ -2,10 +2,7 @@ package org.ivanov.myshop.cart.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.ivanov.myshop.cart.dto.ActualCartResponseDto;
-import org.ivanov.myshop.cart.dto.CartResponseDto;
-import org.ivanov.myshop.cart.dto.CreateCartDto;
-import org.ivanov.myshop.cart.dto.DeleteCartDto;
+import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.mapper.CartMapper;
 import org.ivanov.myshop.cart.model.Cart;
@@ -18,6 +15,7 @@ import org.ivanov.myshop.product.repository.ProductRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -61,7 +59,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public CartResponseDto removeFromCart(DeleteCartDto dto, String userIp) {
         Product product = getProductById(dto.productId());
-        Cart cart = getActualCart(userIp);
+        Cart cart = getActualUsrCart(userIp);
 
         CartItems cartItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product))
                 .findFirst().orElseThrow(() ->  new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет"));
@@ -71,19 +69,35 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public ActualCartResponseDto getCart(String userIp) {
-        Cart cart = getActualCart(userIp);
+    public ActualCartResponseDto getActualCart(String userIp) {
+        Cart cart = getActualUsrCart(userIp);
         return cartMapper.mapToActualCartResponseDto(cart.getOrderedProducts());
     }
 
     @Override
     public void deleteProductFromCart(Long productId, String userIp) {
         Product product = getProductById(productId);
-        Cart cart = getActualCart(userIp);
+        Cart cart = getActualUsrCart(userIp);
         CartItems cartItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst()
                 .orElseThrow(() -> new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет"));
         cart.getOrderedProducts().remove(cartItems);
         curtRepository.save(cart);
+    }
+
+    @Override
+    public ConfirmCartResponseDto getConfirmCart(Long cartId) {
+        Cart cart = curtRepository.findById(cartId)
+                .orElseThrow(() -> new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины c id="+cartId + " не существует"));
+        return new ConfirmCartResponseDto(cartMapper.mapToPurchasedProductDtoList(cart.getOrderedProducts()));
+    }
+
+    @Override
+    @Transactional
+    public Long confirmCart(String userIp) {
+        Cart cart = getActualUsrCart(userIp);
+        cart.setConfirmedDate(LocalDateTime.now());
+        cart.setStatus(Status.DONE);
+        return cart.getCurtId();
     }
 
     private Product getProductById(Long productId) {
@@ -113,7 +127,7 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-    private Cart getActualCart(String userIp) {
+    private Cart getActualUsrCart(String userIp) {
         return curtRepository.findByUserIpAndStatus(userIp, Status.CREATED)
                 .orElseThrow(() -> new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины не существует"));
     }

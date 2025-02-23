@@ -15,6 +15,7 @@
             <column name="creation_date" type="TIMESTAMP(0)">
                 <constraints nullable="false"/>
             </column>
+            <column name="confirmed_date" type="TIMESTAMP(0)"/>
             <column name="status" type="VARCHAR">
                 <constraints nullable="false"/>
             </column>

@@ -1,16 +1,17 @@
 package org.ivanov.myshop.cart.service;
 
-import org.ivanov.myshop.cart.dto.ActualCartResponseDto;
-import org.ivanov.myshop.cart.dto.CartResponseDto;
-import org.ivanov.myshop.cart.dto.CreateCartDto;
-import org.ivanov.myshop.cart.dto.DeleteCartDto;
+import org.ivanov.myshop.cart.dto.*;
 
 public interface CartService {
     CartResponseDto addToCurt(CreateCartDto dto, String userIp);
 
     CartResponseDto removeFromCart(DeleteCartDto dto, String userIp);
 
-    ActualCartResponseDto getCart(String userIp);
+    ActualCartResponseDto getActualCart(String userIp);
 
     void deleteProductFromCart(Long productId, String userIp);
+
+    ConfirmCartResponseDto getConfirmCart(Long cartId);
+
+    Long confirmCart(String userIp);
 }

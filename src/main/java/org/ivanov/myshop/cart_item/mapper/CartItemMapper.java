@@ -3,6 +3,7 @@ package org.ivanov.myshop.cart_item.mapper;
 import org.ivanov.myshop.cart.dto.ActualCartResponseDto;
 import org.ivanov.myshop.cart_item.dto.CartItemResponseDto;
 import org.ivanov.myshop.cart_item.model.CartItems;
+import org.ivanov.myshop.product.mapper.ProductMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -11,7 +12,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Set;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {ProductMapper.class})
 public interface CartItemMapper {
     @Mapping(target = "productName", source = "product.productName")
     @Mapping(target = "price", source = "product.price")

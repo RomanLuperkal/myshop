@@ -29,6 +29,6 @@ public class ProductServiceImpl implements ProductService {
             }
             return criteriaBuilder.like(root.get("productName"), "%" + search + "%");
         };
-        return productMapper.maptoListProductDto(productRepository.findAll(spec, pageable));
+        return productMapper.mapToListProductDto(productRepository.findAll(spec, pageable));
     }
 }

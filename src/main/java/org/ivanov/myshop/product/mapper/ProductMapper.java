@@ -27,8 +27,7 @@ public interface ProductMapper {
     @Mapping(target = "totalPages", expression = "java(products.getTotalPages())")
     @Mapping(target = "first", expression = "java(products.isFirst())")
     @Mapping(target = "last", expression = "java(products.isLast())")
-    ListProductDto maptoListProductDto(Page<Product> products);
-
+    ListProductDto mapToListProductDto(Page<Product> products);
 
 
     @Named("bytesToBase64")

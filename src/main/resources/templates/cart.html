@@ -56,7 +56,7 @@
     </table>
     <div class="d-flex justify-content-between">
         <a href="/products" class="btn btn-secondary">Продолжить покупки</a>
-        <button class="btn btn-success">Оформить заказ</button>
+        <button class="btn btn-success" id="confirm-order">Оформить заказ</button>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -81,7 +81,6 @@
             const productId = button.closest('tr').getAttribute('data-product-id');
             const newCount = parseInt(input.value) + 1;
 
-            // Вызываем addToCart и обновляем input.value только при успешном ответе
             addToCart(productId, 1).then(success => {
                 if (success) {
                     input.value = newCount;
@@ -100,7 +99,6 @@
             if (currentCount > 1) {
                 const newCount = currentCount - 1;
 
-                // Вызываем removeFromCart и обновляем input.value только при успешном ответе
                 removeFromCart(productId, 1).then(success => {
                     if (success) {
                         input.value = newCount;
@@ -117,7 +115,6 @@
             const row = button.closest('tr');
             const productId = row.getAttribute('data-product-id');
 
-            // Удаляем все единицы товара
             removeProductFromCart(productId).then(success => {
                 if (success) {
                     row.remove(); // Удаляем строку из DOM
@@ -134,7 +131,6 @@
             count: count
         };
         const url = `/carts/add`;
-
         return fetch(url, {
             method: 'POST',
             headers: {
@@ -165,7 +161,6 @@
             count: count
         };
         const url = `/carts/deleteItem`;
-
         return fetch(url, {
             method: 'DELETE',
             headers: {
@@ -201,7 +196,6 @@
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     });
                 }
-
                 // Если статус 204 (No Content), просто возвращаем true
                 if (response.status === 204) {
                     console.log('Товар успешно удален'); // Логируем успешное удаление
@@ -217,6 +211,34 @@
     // Инициализация общей суммы при загрузке страницы
     document.addEventListener('DOMContentLoaded', () => {
         updateCartTotal();
+
+        // Обработчик для кнопки "Оформить заказ"
+        document.getElementById('confirm-order').addEventListener('click', () => {
+            const url = '/carts/confirm'; // URL для подтверждения заказа
+
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(body => {
+                            alert(body.message || 'Ошибка при оформлении заказа');
+                            throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
+                        });
+                    }
+                    return response.text(); // Получаем ID подтверждённой корзины как текст
+                })
+                .then(curtId => {
+                    window.location.href = `/carts/${curtId}`; // Перенаправляем на страницу заказа
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Не удалось оформить заказ.');
+                });
+        });
     });
 </script>
 </body>

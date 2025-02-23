@@ -2,10 +2,7 @@ package org.ivanov.myshop.cart.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.ivanov.myshop.cart.dto.ActualCartResponseDto;
-import org.ivanov.myshop.cart.dto.CartResponseDto;
-import org.ivanov.myshop.cart.dto.CreateCartDto;
-import org.ivanov.myshop.cart.dto.DeleteCartDto;
+import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.service.CartService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
     private final CartService curtService;
 
+
     @PostMapping("/add")
     @ResponseBody
     public ResponseEntity<CartResponseDto> addToCart(@RequestBody CreateCartDto dto, HttpServletRequest request) {
@@ -29,9 +27,10 @@ public class CartController {
         return ResponseEntity.ok(curtService.removeFromCart(dto, request.getRemoteAddr()));
     }
 
+    //TODO необходимо реализовать создание корзины при ее отсутствии
     @GetMapping("/actual")
     public String getActualCart(HttpServletRequest request, Model model) {
-        ActualCartResponseDto cart = curtService.getCart(request.getRemoteAddr());
+        ActualCartResponseDto cart = curtService.getActualCart(request.getRemoteAddr());
         model.addAttribute("cart", cart);
         return "cart";
     }
@@ -42,4 +41,20 @@ public class CartController {
         curtService.deleteProductFromCart(productId, request.getRemoteAddr());
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("{cartId}")
+    public String getConfirmCart(@PathVariable Long cartId, Model model) {
+        ConfirmCartResponseDto confirmCart = curtService.getConfirmCart(cartId);
+        model.addAttribute("confirmCart", confirmCart);
+        return "confirm-cart";
+    }
+
+    //TODO реализовать проверку и уменьшение кол-ва товара при подтверждении
+    @PutMapping("/confirm")
+    @ResponseBody
+    public ResponseEntity<Long> confirmCart(HttpServletRequest request){
+        Long curtId = curtService.confirmCart(request.getRemoteAddr());
+        return ResponseEntity.ok(curtId);
+    }
+
 }

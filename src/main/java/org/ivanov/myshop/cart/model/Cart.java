@@ -22,6 +22,8 @@ public class Cart {
     private String userIp;
     @Column(name = "creation_date")
     private LocalDateTime creationDate = LocalDateTime.now();
+    @Column(name = "confirmed_date")
+    private LocalDateTime confirmedDate;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.CREATED;
