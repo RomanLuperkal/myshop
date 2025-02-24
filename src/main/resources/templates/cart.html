@@ -14,10 +14,22 @@
             font-size: 1rem; /* Размер шрифта */
             box-sizing: border-box; /* Учитываем padding при расчёте ширины */
         }
+
+        /* Стиль для кнопки "История заказов" */
+        .history-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
     </style>
 </head>
 <body>
 <div class="container mt-5">
+    <!-- Кнопка "История заказов" в правом верхнем углу -->
+    <div class="history-button">
+        <a href="/carts/confirm" class="btn btn-success">История заказов</a>
+    </div>
+
     <h1>Корзина</h1>
     <table class="table table-bordered">
         <thead>
@@ -56,11 +68,36 @@
     </table>
     <div class="d-flex justify-content-between">
         <a href="/products" class="btn btn-secondary">Продолжить покупки</a>
-        <button class="btn btn-success" id="confirm-order">Оформить заказ</button>
+        <button class="btn btn-success" id="confirm-order" disabled>Оформить заказ</button>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    function checkCartItems() {
+        const rows = document.querySelectorAll('#cart-items tr');
+        const confirmOrderButton = document.getElementById('confirm-order');
+        if (rows.length === 0) {
+            confirmOrderButton.disabled = true; // Если товаров нет, делаем кнопку неактивной
+        } else {
+            confirmOrderButton.disabled = false; // Если товары есть, делаем кнопку активной
+        }
+    }
+
+    // Инициализация состояния кнопки при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        checkCartItems(); // Проверяем наличие товаров при загрузке страницы
+
+        // Обработчики событий для изменения количества
+        document.querySelectorAll('.increase-btn, .decrease-btn, .remove-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                setTimeout(checkCartItems, 100); // Проверяем наличие товаров после изменения
+            });
+        });
+    });
     // Функция для пересчёта общей цены корзины
     function updateCartTotal() {
         let total = 0;

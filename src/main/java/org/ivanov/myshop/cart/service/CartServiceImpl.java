@@ -6,6 +6,7 @@ import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.mapper.CartMapper;
 import org.ivanov.myshop.cart.model.Cart;
+import org.ivanov.myshop.cart.proection.ConfirmCart;
 import org.ivanov.myshop.cart.repository.CartRepository;
 import org.ivanov.myshop.cart_item.model.CartItems;
 import org.ivanov.myshop.handler.exception.CartException;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -95,9 +97,16 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public Long confirmCart(String userIp) {
         Cart cart = getActualUsrCart(userIp);
+        processCart(cart);
         cart.setConfirmedDate(LocalDateTime.now());
         cart.setStatus(Status.DONE);
         return cart.getCurtId();
+    }
+
+    @Override
+    public ConfirmCartDto getConfirmCartDto(String userIp) {
+        List<ConfirmCart> confirmCarts = curtRepository.getConfirmCartsByUserIp(userIp);
+        return cartMapper.mapToConfirmCartDto(confirmCarts);
     }
 
     private Product getProductById(Long productId) {
@@ -129,6 +138,20 @@ public class CartServiceImpl implements CartService {
 
     private Cart getActualUsrCart(String userIp) {
         return curtRepository.findByUserIpAndStatus(userIp, Status.CREATED)
-                .orElseThrow(() -> new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины не существует"));
+                .orElseGet(Cart::new);
+    }
+
+    private void processCart(Cart cart) {
+        cart.getOrderedProducts().forEach(cartItem -> {
+            Long stockCount = cartItem.getProduct().getCount();
+            int requestedCount = cartItem.getCount();
+
+            if (stockCount < requestedCount) {
+                throw new CartException(HttpStatus.CONFLICT, "Кол-во товара на складе изменилось. Пересоздайте заказ");
+            }
+
+            // Обновляем количество товара на складе
+            cartItem.getProduct().setCount(stockCount - requestedCount);
+        });
     }
 }

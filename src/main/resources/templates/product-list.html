@@ -38,13 +38,12 @@
     <!-- Строка поиска и фильтрации -->
     <div class="row mb-4">
         <div class="col-md-12">
-            <div class="filter-section">
+            <div class="filter-section d-flex align-items-center gap-3">
                 <!-- Поле поиска -->
                 <div class="flex-grow-1">
                     <input type="text" class="form-control" id="search" placeholder="Поиск по названию/описанию товара"
                            th:value="${param.search}" name="search">
                 </div>
-
                 <!-- Выбор количества товаров на странице -->
                 <div>
                     <select class="form-select" id="page-size" name="size">
@@ -54,7 +53,6 @@
                         <option value="100" th:selected="${param.size == 100}">100 товаров</option>
                     </select>
                 </div>
-
                 <!-- Сортировка по цене -->
                 <div>
                     <select class="form-select" id="price-filter" name="priceSort">
@@ -63,7 +61,6 @@
                         <option value="price,desc" th:selected="${param.sort != null and #lists.contains(param.sort, 'price,desc')}">От дорогих к дешевым</option>
                     </select>
                 </div>
-
                 <!-- Сортировка по алфавиту -->
                 <div>
                     <select class="form-select" id="alphabet-filter" name="alphabetSort">
@@ -72,15 +69,17 @@
                         <option value="productName,desc" th:selected="${param.sort != null and #lists.contains(param.sort, 'productName,desc')}">Я-А</option>
                     </select>
                 </div>
-
                 <!-- Кнопка "Применить фильтры" -->
                 <div>
                     <button class="btn btn-primary" onclick="applyFilters()">Применить фильтры</button>
                 </div>
+                <!-- Кнопка "История заказов" -->
+                <div>
+                    <a href="/carts/confirm" class="btn btn-success">История заказов</a>
+                </div>
             </div>
         </div>
     </div>
-
     <!-- Список товаров (плиткой) -->
     <div class="row" id="product-list">
         <div class="col-md-4 mb-4" th:each="product : ${products.content}">
@@ -97,9 +96,7 @@
                         <div class="input-group input-group-sm" style="width: 100px;">
                             <button class="btn btn-outline-secondary"
                                     th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
-
                             <input type="text" class="form-control text-center" value="1" th:id="'quantity-' + ${product.productId}" readonly >
-
                             <button class="btn btn-outline-secondary"
                                     th:onclick="'increaseQuantity(' + ${product.productId} + ')'">+</button>
                         </div>
@@ -108,7 +105,6 @@
             </div>
         </div>
     </div>
-
     <!-- Пагинация -->
     <div class="pagination-container">
         <nav aria-label="Page navigation">

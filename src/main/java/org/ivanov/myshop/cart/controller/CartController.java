@@ -13,24 +13,24 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/carts")
 @RequiredArgsConstructor
 public class CartController {
-    private final CartService curtService;
+    private final CartService cartService;
 
 
     @PostMapping("/add")
     @ResponseBody
     public ResponseEntity<CartResponseDto> addToCart(@RequestBody CreateCartDto dto, HttpServletRequest request) {
-        return ResponseEntity.ok(curtService.addToCurt(dto, request.getRemoteAddr()));
+        return ResponseEntity.ok(cartService.addToCurt(dto, request.getRemoteAddr()));
     }
     @DeleteMapping("/deleteItem")
     @ResponseBody
     public ResponseEntity<CartResponseDto> deleteFromCart(@RequestBody DeleteCartDto dto, HttpServletRequest request) {
-        return ResponseEntity.ok(curtService.removeFromCart(dto, request.getRemoteAddr()));
+        return ResponseEntity.ok(cartService.removeFromCart(dto, request.getRemoteAddr()));
     }
 
     //TODO необходимо реализовать создание корзины при ее отсутствии
     @GetMapping("/actual")
     public String getActualCart(HttpServletRequest request, Model model) {
-        ActualCartResponseDto cart = curtService.getActualCart(request.getRemoteAddr());
+        ActualCartResponseDto cart = cartService.getActualCart(request.getRemoteAddr());
         model.addAttribute("cart", cart);
         return "cart";
     }
@@ -38,13 +38,13 @@ public class CartController {
     @DeleteMapping("/deleteProduct/{productId}")
     @ResponseBody
     public ResponseEntity<Void> deleteProductFromCart(@PathVariable Long productId, HttpServletRequest request) {
-        curtService.deleteProductFromCart(productId, request.getRemoteAddr());
+        cartService.deleteProductFromCart(productId, request.getRemoteAddr());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("{cartId}")
     public String getConfirmCart(@PathVariable Long cartId, Model model) {
-        ConfirmCartResponseDto confirmCart = curtService.getConfirmCart(cartId);
+        ConfirmCartResponseDto confirmCart = cartService.getConfirmCart(cartId);
         model.addAttribute("confirmCart", confirmCart);
         return "confirm-cart";
     }
@@ -53,8 +53,15 @@ public class CartController {
     @PutMapping("/confirm")
     @ResponseBody
     public ResponseEntity<Long> confirmCart(HttpServletRequest request){
-        Long curtId = curtService.confirmCart(request.getRemoteAddr());
+        Long curtId = cartService.confirmCart(request.getRemoteAddr());
         return ResponseEntity.ok(curtId);
+    }
+
+    @GetMapping("/confirm")
+    public String getConfirmCarts(HttpServletRequest request, Model model) {
+        ConfirmCartDto confirmCartDto = cartService.getConfirmCartDto(request.getRemoteAddr());
+        model.addAttribute("confirmCartDto", confirmCartDto);
+        return "cart-list";
     }
 
 }
