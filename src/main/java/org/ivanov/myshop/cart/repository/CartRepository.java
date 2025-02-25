@@ -13,7 +13,23 @@ import java.util.Optional;
 
 @Repository
 public interface CartRepository extends CrudRepository<Cart, Long> {
-    Optional<Cart> findByUserIpAndStatus(String userIp, Status status);
+    @Query("""
+            SELECT c
+            FROM Cart c
+            JOIN FETCH c.orderedProducts ci
+            JOIN FETCH ci.product p
+            WHERE c.userIp = :userIp AND c.status = :status
+            """)
+    Optional<Cart> findByUserIpAndStatus(@Param("userIp") String userIp, @Param("status") Status status);
+
+    @Query("""
+            SELECT c
+            FROM Cart c
+            JOIN FETCH c.orderedProducts ci
+            JOIN FETCH ci.product p
+            WHERE c.curtId = :curtId
+            """)
+    Optional<Cart> getFullCartById(@Param("curtId") Long curtId);
 
     @Query("""
             SELECT c.curtId as id, c.confirmedDate as  confirmedDate, sum(p.price * ci.count) as cartPrice

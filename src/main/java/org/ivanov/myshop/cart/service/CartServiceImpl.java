@@ -23,7 +23,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
-    private final CartRepository curtRepository;
+    private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final CartMapper cartMapper;
 
@@ -35,7 +35,7 @@ public class CartServiceImpl implements CartService {
             throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
         }
 
-        Cart cart = curtRepository.findByUserIpAndStatus(userIp, Status.CREATED).orElseGet(Cart::new);
+        Cart cart = cartRepository.findByUserIpAndStatus(userIp, Status.CREATED).orElseGet(Cart::new);
         if (cart.getOrderedProducts().isEmpty()) {
             cart.setUserIp(userIp);
             prepareOrder(cart, product, dto);
@@ -50,8 +50,7 @@ public class CartServiceImpl implements CartService {
             );
         }
 
-        productRepository.save(product);
-        curtRepository.save(cart);
+        cartRepository.save(cart);
         return new CartResponseDto("Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. добавлен" +
                 " в корзину");
     }
@@ -66,7 +65,7 @@ public class CartServiceImpl implements CartService {
         CartItems cartItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product))
                 .findFirst().orElseThrow(() ->  new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет"));
         removeProduct(cart, dto, cartItems);
-        curtRepository.save(cart);
+        cartRepository.save(cart);
         return new CartResponseDto("Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. удален из корзины");
     }
 
@@ -83,12 +82,12 @@ public class CartServiceImpl implements CartService {
         CartItems cartItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst()
                 .orElseThrow(() -> new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет"));
         cart.getOrderedProducts().remove(cartItems);
-        curtRepository.save(cart);
+        cartRepository.save(cart);
     }
 
     @Override
     public ConfirmCartResponseDto getConfirmCart(Long cartId) {
-        Cart cart = curtRepository.findById(cartId)
+        Cart cart = cartRepository.getFullCartById(cartId)
                 .orElseThrow(() -> new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины c id="+cartId + " не существует"));
         return new ConfirmCartResponseDto(cartMapper.mapToPurchasedProductDtoList(cart.getOrderedProducts()));
     }
@@ -105,7 +104,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public ConfirmCartDto getConfirmCartDto(String userIp) {
-        List<ConfirmCart> confirmCarts = curtRepository.getConfirmCartsByUserIp(userIp);
+        List<ConfirmCart> confirmCarts = cartRepository.getConfirmCartsByUserIp(userIp);
         return cartMapper.mapToConfirmCartDto(confirmCarts);
     }
 
@@ -137,7 +136,7 @@ public class CartServiceImpl implements CartService {
     }
 
     private Cart getActualUsrCart(String userIp) {
-        return curtRepository.findByUserIpAndStatus(userIp, Status.CREATED)
+        return cartRepository.findByUserIpAndStatus(userIp, Status.CREATED)
                 .orElseGet(Cart::new);
     }
 

@@ -24,16 +24,47 @@
         .filter-section button {
             white-space: nowrap; /* Предотвращает перенос текста на кнопке */
         }
-        .cart-button {
+        /* Кнопки в правом верхнем углу */
+        .top-buttons {
             position: fixed;
             top: 20px;
             right: 20px;
+            display: flex;
+            flex-direction: column; /* Кнопки друг под другом */
+            gap: 10px; /* Отступ между кнопками */
+            z-index: 1000;
+        }
+        .top-buttons a {
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center; /* Текст по центру */
+        }
+        .top-buttons a.btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .top-buttons a.btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .top-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
 <body>
+<!-- Кнопки в правом верхнем углу -->
+<div class="top-buttons">
+    <a href="/carts/actual" class="btn btn-primary">Перейти в корзину</a>
+    <a href="/carts/confirm" class="btn btn-success">История заказов</a>
+</div>
 
-<a href="/carts/actual" class="btn btn-primary cart-button">Перейти в корзину</a>
 <div class="container mt-4">
     <!-- Строка поиска и фильтрации -->
     <div class="row mb-4">
@@ -72,10 +103,6 @@
                 <!-- Кнопка "Применить фильтры" -->
                 <div>
                     <button class="btn btn-primary" onclick="applyFilters()">Применить фильтры</button>
-                </div>
-                <!-- Кнопка "История заказов" -->
-                <div>
-                    <a href="/carts/confirm" class="btn btn-success">История заказов</a>
                 </div>
             </div>
         </div>
