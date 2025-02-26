@@ -1,11 +1,10 @@
 package org.ivanov.myshop.product.mapper;
 
-import org.ivanov.myshop.product.dto.ListProductDto;
-import org.ivanov.myshop.product.dto.ProductCreateDto;
-import org.ivanov.myshop.product.dto.ProductResponseDto;
+import org.ivanov.myshop.product.dto.*;
 import org.ivanov.myshop.product.model.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +27,18 @@ public interface ProductMapper {
     @Mapping(target = "first", expression = "java(products.isFirst())")
     @Mapping(target = "last", expression = "java(products.isLast())")
     ListProductDto mapToListProductDto(Page<Product> products);
+
+    @Mapping(target = "productId", ignore = true)
+    @Mapping(target = "image", source = "image", qualifiedByName = "getBytesFromMultipartFile")
+    void mapToProduct(@MappingTarget Product product, UpdateProductDto updateProduct);
+
+    ProductShortResponseDto mapToProductShortResponseDto(Product product);
+
+    List<ProductShortResponseDto> mapToProductShortResponseDto(Iterable<Product> products);
+
+    default ListShortProductDto mapToListShortProductDto(Iterable<Product> products) {
+        return new ListShortProductDto(mapToProductShortResponseDto(products));
+    }
 
 
     @Named("bytesToBase64")

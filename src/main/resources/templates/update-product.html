@@ -51,6 +51,7 @@
     <h2>Добавить товар</h2>
 
     <form th:action="@{/admin/products}" method="post" enctype="multipart/form-data" th:object="${product}">
+        <input type="hidden" name="_method" value="patch"></input>
         <div class="mb-3">
             <label for="name" class="form-label">Название товара:</label>
             <input type="text" class="form-control" id="name" th:field="*{productName}" th:classappend="${#fields.hasErrors('productName')} ? 'is-invalid'" required>
@@ -80,7 +81,7 @@
             <div class="invalid-feedback" th:if="${#fields.hasErrors('count')}" th:errors="*{count}"></div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Добавить товар</button>
+        <button type="submit" class="btn btn-primary">Обновить товар</button>
     </form>
 </div>
 
