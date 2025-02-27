@@ -3,7 +3,7 @@ package org.ivanov.myshop.cart.service;
 import org.ivanov.myshop.cart.dto.*;
 
 public interface CartService {
-    CartResponseDto addToCurt(CreateCartDto dto, String userIp);
+    CartResponseDto addToCart(CreateCartDto dto, String userIp);
 
     CartResponseDto removeFromCart(DeleteCartDto dto, String userIp);
 
@@ -15,5 +15,5 @@ public interface CartService {
 
     Long confirmCart(String userIp);
 
-    ConfirmCartDto getConfirmCartDto(String userIp);
+    ListConfirmCartDto getConfirmCartDto(String userIp);
 }

@@ -1,0 +1,17 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:my-shop
+    username: sa
+    password: ${POSTGRES_PASSWORD}
+
+
+  h2:
+    console:
+      enabled: true #http://localhost:8080/h2-console

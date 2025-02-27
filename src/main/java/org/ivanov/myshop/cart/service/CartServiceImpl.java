@@ -29,7 +29,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public CartResponseDto addToCurt(CreateCartDto dto, String userIp) {
+    public CartResponseDto addToCart(CreateCartDto dto, String userIp) {
         Product product = getProductById(dto.productId());
         if (product.getCount() < dto.count()) {
             throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
@@ -103,7 +103,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public ConfirmCartDto getConfirmCartDto(String userIp) {
+    public ListConfirmCartDto getConfirmCartDto(String userIp) {
         List<ConfirmCart> confirmCarts = cartRepository.getConfirmCartsByUserIp(userIp);
         return cartMapper.mapToConfirmCartDto(confirmCarts);
     }

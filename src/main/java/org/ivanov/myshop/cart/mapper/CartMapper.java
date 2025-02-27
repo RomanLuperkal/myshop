@@ -1,7 +1,7 @@
 package org.ivanov.myshop.cart.mapper;
 
 import org.ivanov.myshop.cart.dto.ActualCartResponseDto;
-import org.ivanov.myshop.cart.dto.ConfirmCartDto;
+import org.ivanov.myshop.cart.dto.ListConfirmCartDto;
 import org.ivanov.myshop.cart.proection.ConfirmCart;
 import org.ivanov.myshop.cart_item.mapper.CartItemMapper;
 import org.ivanov.myshop.cart_item.model.CartItems;
@@ -26,8 +26,8 @@ public interface CartMapper {
 
     List<PurchasedProductDto> mapToPurchasedProductDtoList(Set<CartItems> cartItemsList);
 
-    default ConfirmCartDto mapToConfirmCartDto(List<ConfirmCart> carts) {
-        return new ConfirmCartDto(carts, calcTotalCount(carts));
+    default ListConfirmCartDto mapToConfirmCartDto(List<ConfirmCart> carts) {
+        return new ListConfirmCartDto(carts, calcTotalCount(carts));
     }
 
     default ActualCartResponseDto mapToActualCartResponseDto(Set<CartItems> cartItems) {

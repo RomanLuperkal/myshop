@@ -5,5 +5,5 @@ import org.ivanov.myshop.cart.proection.ConfirmCart;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record ConfirmCartDto(List<ConfirmCart> confirmCarts, BigDecimal totalPrice) {
+public record ListConfirmCartDto(List<ConfirmCart> confirmCarts, BigDecimal totalPrice) {
 }

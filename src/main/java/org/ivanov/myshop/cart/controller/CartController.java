@@ -19,7 +19,7 @@ public class CartController {
     @PostMapping("/add")
     @ResponseBody
     public ResponseEntity<CartResponseDto> addToCart(@RequestBody CreateCartDto dto, HttpServletRequest request) {
-        return ResponseEntity.ok(cartService.addToCurt(dto, request.getRemoteAddr()));
+        return ResponseEntity.ok(cartService.addToCart(dto, request.getRemoteAddr()));
     }
     @DeleteMapping("/deleteItem")
     @ResponseBody
@@ -59,8 +59,8 @@ public class CartController {
 
     @GetMapping("/confirm")
     public String getConfirmCarts(HttpServletRequest request, Model model) {
-        ConfirmCartDto confirmCartDto = cartService.getConfirmCartDto(request.getRemoteAddr());
-        model.addAttribute("confirmCartDto", confirmCartDto);
+        ListConfirmCartDto listConfirmCartDto = cartService.getConfirmCartDto(request.getRemoteAddr());
+        model.addAttribute("confirmCartDto", listConfirmCartDto);
         return "cart-list";
     }
 
