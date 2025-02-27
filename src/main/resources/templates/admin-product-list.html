@@ -13,6 +13,9 @@
         <form th:action="@{/logout}" method="post">
             <button type="submit" class="btn btn-secondary">Выйти</button>
         </form>
+        <form th:action="@{/admin/products/create}" method="get">
+            <button type="submit" class="btn btn-secondary">Добавить продукт</button>
+        </form>
     </div>
 
     <h2>Список товаров</h2>
