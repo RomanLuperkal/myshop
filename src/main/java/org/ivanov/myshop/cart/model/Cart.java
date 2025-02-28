@@ -17,7 +17,7 @@ public class Cart {
     @Id
     @Column(name = "curt_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long curtId;
+    private Long cartId;
     @Column(name = "user_ip")
     private String userIp;
     @Column(name = "creation_date")

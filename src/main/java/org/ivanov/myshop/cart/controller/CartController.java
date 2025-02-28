@@ -59,7 +59,7 @@ public class CartController {
 
     @GetMapping("/confirm")
     public String getConfirmCarts(HttpServletRequest request, Model model) {
-        ListConfirmCartDto listConfirmCartDto = cartService.getConfirmCartDto(request.getRemoteAddr());
+        ListConfirmCartDto listConfirmCartDto = cartService.getConfirmCartList(request.getRemoteAddr());
         model.addAttribute("confirmCartDto", listConfirmCartDto);
         return "cart-list";
     }

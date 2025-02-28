@@ -99,11 +99,11 @@ public class CartServiceImpl implements CartService {
         processCart(cart);
         cart.setConfirmedDate(LocalDateTime.now());
         cart.setStatus(Status.DONE);
-        return cart.getCurtId();
+        return cart.getCartId();
     }
 
     @Override
-    public ListConfirmCartDto getConfirmCartDto(String userIp) {
+    public ListConfirmCartDto getConfirmCartList(String userIp) {
         List<ConfirmCart> confirmCarts = cartRepository.getConfirmCartsByUserIp(userIp);
         return cartMapper.mapToConfirmCartDto(confirmCarts);
     }

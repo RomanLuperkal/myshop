@@ -27,17 +27,17 @@ public interface CartRepository extends CrudRepository<Cart, Long> {
             FROM Cart c
             JOIN FETCH c.orderedProducts ci
             JOIN FETCH ci.product p
-            WHERE c.curtId = :curtId
+            WHERE c.cartId = :curtId
             """)
     Optional<Cart> getFullCartById(@Param("curtId") Long curtId);
 
     @Query("""
-            SELECT c.curtId as id, c.confirmedDate as  confirmedDate, sum(p.price * ci.count) as cartPrice
+            SELECT c.cartId as id, c.confirmedDate as  confirmedDate, sum(p.price * ci.count) as cartPrice
             FROM Cart c
-            JOIN CartItems ci on  c.curtId = ci.cart.curtId
+            JOIN CartItems ci on  c.cartId = ci.cart.cartId
             JOIN Product p on p.productId = ci.product.productId
             WHERE c.userIp = :userIp
-            group by c.confirmedDate, c.curtId
+            group by c.confirmedDate, c.cartId
             """)
     List<ConfirmCart> getConfirmCartsByUserIp(@Param("userIp") String userIp);
 }

@@ -15,5 +15,5 @@ public interface CartService {
 
     Long confirmCart(String userIp);
 
-    ListConfirmCartDto getConfirmCartDto(String userIp);
+    ListConfirmCartDto getConfirmCartList(String userIp);
 }
