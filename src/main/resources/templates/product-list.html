@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
     <title>Витрина товаров</title>
     <!-- Подключение Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></link>
     <style>
         .product-card {
             transition: transform 0.2s;
@@ -88,6 +88,7 @@
 
 <!-- Кнопка "Войти как администратор" -->
 <a href="/login" class="admin-login-button">Войти как администратор</a>
+<p>Текущий размер: <strong th:text="${param.size}"></strong></p>
 
 <div class="container mt-4">
     <!-- Строка поиска и фильтрации -->
@@ -97,15 +98,15 @@
                 <!-- Поле поиска -->
                 <div class="flex-grow-1">
                     <input type="text" class="form-control" id="search" placeholder="Поиск по названию/описанию товара"
-                           th:value="${param.search}" name="search">
+                           th:value="${param.search}" name="search"></input>
                 </div>
                 <!-- Выбор количества товаров на странице -->
                 <div>
                     <select class="form-select" id="page-size" name="size">
-                        <option value="10" th:selected="${param.size == 10}">10 товаров</option>
-                        <option value="20" th:selected="${param.size == 20}">20 товаров</option>
-                        <option value="50" th:selected="${param.size == 50}">50 товаров</option>
-                        <option value="100" th:selected="${param.size == 100}">100 товаров</option>
+                        <option value="10">10 товаров</option>
+                        <option value="20">20 товаров</option>
+                        <option value="50">50 товаров</option>
+                        <option value="100">100 товаров</option>
                     </select>
                 </div>
                 <!-- Сортировка по цене -->
@@ -135,7 +136,7 @@
     <div class="row" id="product-list">
         <div class="col-md-4 mb-4" th:each="product : ${products.content}">
             <div class="card product-card">
-                <img th:src="${product.image}" class="card-img-top" alt="Изображение товара">
+                <img th:src="${product.image}" class="card-img-top" alt="Изображение товара"></img>
                 <div class="card-body">
                     <h5 class="card-title" th:text="${product.productName}">Название товара</h5>
                     <p class="card-text">Цена: <strong th:text="${product.price} + ' ₽'">1000 ₽</strong></p>
@@ -147,7 +148,7 @@
                         <div class="input-group input-group-sm" style="width: 100px;">
                             <button class="btn btn-outline-secondary"
                                     th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
-                            <input type="text" class="form-control text-center" value="1" th:id="'quantity-' + ${product.productId}" readonly >
+                            <input type="text" class="form-control text-center" value="1" th:id="'quantity-' + ${product.productId}" readonly="readonly" ></input>
                             <button class="btn btn-outline-secondary"
                                     th:onclick="'increaseQuantity(' + ${product.productId} + ')'">+</button>
                         </div>
@@ -179,91 +180,6 @@
 </div>
 
 <!-- Подключение Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function addToCart(productId) {
-        const count = document.getElementById('quantity-' + productId);
-        const data = {
-            productId: productId,
-            count: parseInt(count.value)
-        };
-        const url = `/carts/add`;
-        console.log(url);
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                return response.json().then(body => {
-                    if (!response.ok) {
-                        alert(body.message);
-                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
-                    }
-                    alert(body.message);
-                    return body;
-                });
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-            });
-    }
-    function removeFromCart(productId) {
-        const count = document.getElementById('quantity-' + productId);
-        const data = {
-            productId: productId,
-            count: parseInt(count.value)
-        };
-        const url = `/carts/deleteItem`;
-        console.log(url);
-
-        fetch(url, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                return response.json().then(body => {
-                    if (!response.ok) {
-                        alert(body.message);
-                        throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
-                    }
-                    alert(body.message);
-                });
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-            });
-    }
-
-    function increaseQuantity(productId) {
-        const input = document.getElementById('quantity-' + productId); // Находим поле ввода по уникальному ID
-        input.value = parseInt(input.value) + 1; // Увеличиваем значение на 1
-    }
-
-    function decreaseQuantity(productId) {
-        const input = document.getElementById('quantity-' + productId);
-        let quantity = parseInt(input.value);
-        if (quantity > 1) {
-            input.value = quantity - 1;
-        }
-    }
-    function applyFilters() {
-        const search = document.getElementById('search').value;
-        const size = document.getElementById('page-size').value;
-        const priceSort = document.getElementById('price-filter').value;
-        const alphabetSort = document.getElementById('alphabet-filter').value;
-        let url = `/products?page=0&size=${size}`;
-        if (search) url += `&search=${encodeURIComponent(search)}`;
-        if (priceSort) url += `&sort=${encodeURIComponent(priceSort)}`;
-        if (alphabetSort) url += `&sort=${encodeURIComponent(alphabetSort)}`;
-        window.location.href = url;
-    }
-</script>
+<script src="/js/scripts.js"></script>
 </body>
 </html>

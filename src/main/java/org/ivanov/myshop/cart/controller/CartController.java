@@ -27,7 +27,6 @@ public class CartController {
         return ResponseEntity.ok(cartService.removeFromCart(dto, request.getRemoteAddr()));
     }
 
-    //TODO необходимо реализовать создание корзины при ее отсутствии
     @GetMapping("/actual")
     public String getActualCart(HttpServletRequest request, Model model) {
         ActualCartResponseDto cart = cartService.getActualCart(request.getRemoteAddr());
@@ -49,7 +48,6 @@ public class CartController {
         return "confirm-cart";
     }
 
-    //TODO реализовать проверку и уменьшение кол-ва товара при подтверждении
     @PutMapping("/confirm")
     @ResponseBody
     public ResponseEntity<Long> confirmCart(HttpServletRequest request){
@@ -60,7 +58,7 @@ public class CartController {
     @GetMapping("/confirm")
     public String getConfirmCarts(HttpServletRequest request, Model model) {
         ListConfirmCartDto listConfirmCartDto = cartService.getConfirmCartList(request.getRemoteAddr());
-        model.addAttribute("confirmCartDto", listConfirmCartDto);
+        model.addAttribute("listConfirmCart", listConfirmCartDto);
         return "cart-list";
     }
 

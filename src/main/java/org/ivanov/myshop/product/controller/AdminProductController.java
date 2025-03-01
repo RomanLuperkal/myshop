@@ -11,7 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("admin")
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminProductController {
     private final ProductService productService;
@@ -43,13 +43,13 @@ public class AdminProductController {
         return "update-product";
     }
 
-    @PostMapping(params = "_method=patch")
+    @PostMapping(value = "products/update", params = "_method=patch")
     public String updateProduct(@Valid @ModelAttribute("product") UpdateProductDto updateProductDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return "update-product";
         }
         productService.updateProduct(updateProductDto);
-        return "redirect:admin/products";
+        return "redirect:/admin/products";
     }
 
     @PostMapping(value = "products/{productId}", params = "_method=delete")
