@@ -1,5 +1,6 @@
 package org.ivanov.myshop.configuration;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -17,7 +18,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+    private final AdministratorConfig administratorConfig;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,11 +45,10 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        // Хардкодный пользователь
         UserDetails user = User.builder()
-                .username("admin")
-                .password(passwordEncoder().encode("1234")) // Пароль кодируется
-                .roles("ADMIN")
+                .username(administratorConfig.getLogin())
+                .password(passwordEncoder().encode(administratorConfig.getPassword())) // Пароль кодируется
+                .roles(administratorConfig.getRole())
                 .build();
 
         return new InMemoryUserDetailsManager(user);

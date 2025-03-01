@@ -1,6 +1,5 @@
 package org.ivanov.myshop.product.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.ivanov.myshop.product.ProductTestBase;
@@ -27,13 +26,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-@WithMockUser(username = "admin", roles = {"ADMIN"})
+@WithMockUser(username = "${admin.login}", roles = {"${admin.role}"})
 public class AdminProductControllerTest extends ProductTestBase {
     private final MockMvc mockMvc;
     private final ProductRepository productRepository;
-    private final ObjectMapper objectMapper;
-    private Product product;
-
 
     @AfterEach
     void cleanRepositories() {
