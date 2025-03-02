@@ -9,13 +9,12 @@
         /* Стиль для поля ввода */
         .quantity-input {
             text-align: center;
-            padding: 0.25rem 0.5rem; /* Уменьшаем отступы */
-            min-width: 40px; /* Минимальная ширина */
-            font-size: 1rem; /* Размер шрифта */
-            box-sizing: border-box; /* Учитываем padding при расчёте ширины */
+            padding: 0.25rem 0.5rem;
+            min-width: 40px;
+            font-size: 1rem;
+            box-sizing: border-box;
         }
 
-        /* Стиль для кнопки "История заказов" */
         .history-button {
             position: absolute;
             top: 20px;
@@ -25,7 +24,7 @@
 </head>
 <body>
 <div class="container mt-5">
-    <!-- Кнопка "История заказов" в правом верхнем углу -->
+
     <div class="history-button">
         <a href="/carts/confirm" class="btn btn-success">История заказов</a>
     </div>
@@ -78,9 +77,9 @@
         const rows = document.querySelectorAll('#cart-items tr');
         const confirmOrderButton = document.getElementById('confirm-order');
         if (rows.length === 0) {
-            confirmOrderButton.disabled = true; // Если товаров нет, делаем кнопку неактивной
+            confirmOrderButton.disabled = true;
         } else {
-            confirmOrderButton.disabled = false; // Если товары есть, делаем кнопку активной
+            confirmOrderButton.disabled = false;
         }
     }
 
@@ -178,13 +177,13 @@
                         alert(body.message || 'Ошибка при добавлении товара');
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     }
-                    console.log(body.message); // Логируем успешное добавление
-                    return true; // Возвращаем true для успешного завершения
+                    console.log(body.message);
+                    return true;
                 });
             })
             .catch(error => {
                 console.error('Ошибка:', error);
-                return false; // Возвращаем false в случае ошибки
+                return false;
             });
     }
 
@@ -208,13 +207,13 @@
                         alert(body.message || 'Ошибка при удалении товара');
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     }
-                    console.log(body.message); // Логируем успешное удаление
-                    return true; // Возвращаем true для успешного завершения
+                    console.log(body.message);
+                    return true;
                 });
             })
             .catch(error => {
                 console.error('Ошибка:', error);
-                return false; // Возвращаем false в случае ошибки
+                return false;
             });
     }
 
@@ -230,15 +229,14 @@
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     });
                 }
-                // Если статус 204 (No Content), просто возвращаем true
                 if (response.status === 204) {
-                    console.log('Товар успешно удален'); // Логируем успешное удаление
+                    console.log('Товар успешно удален');
                     return true;
                 }
             })
             .catch(error => {
                 console.error('Ошибка:', error);
-                return false; // Возвращаем false в случае ошибки
+                return false;
             });
     }
 
@@ -248,7 +246,7 @@
 
         // Обработчик для кнопки "Оформить заказ"
         document.getElementById('confirm-order').addEventListener('click', () => {
-            const url = '/carts/confirm'; // URL для подтверждения заказа
+            const url = '/carts/confirm';
 
             fetch(url, {
                 method: 'PUT',
@@ -263,10 +261,10 @@
                             throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                         });
                     }
-                    return response.text(); // Получаем ID подтверждённой корзины как текст
+                    return response.text();
                 })
                 .then(curtId => {
-                    window.location.href = `/carts/${curtId}`; // Перенаправляем на страницу заказа
+                    window.location.href = `/carts/${curtId}`;
                 })
                 .catch(error => {
                     console.error('Ошибка:', error);

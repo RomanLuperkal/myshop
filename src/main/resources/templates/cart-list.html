@@ -76,14 +76,13 @@
             color: #2c3e50;
             margin-top: 20px;
         }
-        /* Кнопки в правом верхнем углу */
         .top-buttons {
             position: fixed;
             top: 20px;
             right: 20px;
             display: flex;
-            flex-direction: column; /* Кнопки друг под другом */
-            gap: 10px; /* Отступ между кнопками */
+            flex-direction: column;
+            gap: 10px;
             z-index: 1000;
         }
         .top-buttons a {
@@ -94,7 +93,7 @@
             font-weight: bold;
             transition: all 0.3s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center; /* Текст по центру */
+            text-align: center;
         }
         .top-buttons a.btn-primary {
             background-color: #007bff;
@@ -117,18 +116,18 @@
                 padding: 20px;
             }
             .top-buttons {
-                align-items: flex-end; /* Кнопки выравниваются по правому краю */
+                align-items: flex-end;
             }
         }
     </style>
 </head>
 <body>
-<!-- Кнопки в правом верхнем углу -->
+
 <div class="top-buttons">
     <a href="/products" class="btn btn-success">Витрина товаров</a>
     <a href="/carts/actual" class="btn btn-primary">Перейти в корзину</a>
 </div>
-<!-- Основной контент -->
+
 <div class="container">
     <h1>Список заказов</h1>
     <!-- Таблица со списком корзин -->
@@ -140,7 +139,7 @@
         </tr>
         </thead>
         <tbody>
-        <!-- Цикл для отображения каждой корзины -->
+
         <tr th:each="cart : ${listConfirmCart.confirmCarts}">
             <td>
                 <a th:href="@{/carts/{id}(id=${cart.id})}"
@@ -150,7 +149,7 @@
         </tr>
         </tbody>
     </table>
-    <!-- Общая сумма всех корзин -->
+
     <p class="total">
         Общая сумма всех корзин: <span th:text="'₽' + ${listConfirmCart.totalPrice}"></span>
     </p>

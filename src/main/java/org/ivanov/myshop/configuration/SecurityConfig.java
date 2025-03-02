@@ -27,16 +27,16 @@ public class SecurityConfig {
         http
                 .csrf((AbstractHttpConfigurer::disable))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login").permitAll() // Доступ к странице логина для всех
-                        .requestMatchers("/admin/**").authenticated() // Доступ к /admin/** только для авторизованных
-                        .anyRequest().permitAll() // Остальные запросы доступны всем
+                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/admin/**").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
-                        .defaultSuccessUrl("/admin/products", true) // Перенаправление после успешного входа
+                        .defaultSuccessUrl("/admin/products", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/products") // Перенаправление после выхода
+                        .logoutSuccessUrl("/products")
                         .permitAll()
                 );
 
@@ -47,7 +47,7 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         UserDetails user = User.builder()
                 .username(administratorConfig.getLogin())
-                .password(passwordEncoder().encode(administratorConfig.getPassword())) // Пароль кодируется
+                .password(passwordEncoder().encode(administratorConfig.getPassword()))
                 .roles(administratorConfig.getRole())
                 .build();
 
@@ -56,6 +56,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Кодировщик паролей
+        return new BCryptPasswordEncoder();
     }
 }
