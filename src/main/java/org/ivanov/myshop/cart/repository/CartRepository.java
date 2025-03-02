@@ -37,6 +37,7 @@ public interface CartRepository extends CrudRepository<Cart, Long> {
             JOIN CartItems ci on  c.cartId = ci.cart.cartId
             JOIN Product p on p.productId = ci.product.productId
             WHERE c.userIp = :userIp
+            AND c.status = org.ivanov.myshop.cart.enums.Status.DONE
             group by c.confirmedDate, c.cartId
             """)
     List<ConfirmCart> getConfirmCartsByUserIp(@Param("userIp") String userIp);
