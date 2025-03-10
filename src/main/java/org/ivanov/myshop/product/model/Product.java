@@ -1,23 +1,21 @@
 package org.ivanov.myshop.product.model;
 
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.proxy.HibernateProxy;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 
 import java.math.BigDecimal;
 import java.util.Objects;
 
-@Entity
 @Getter
 @Setter
 public class Product {
 
     @Id
-    @Column(name = "product_id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column("product_id")
     private Long productId;
-    @Column(name = "product_name")
+    @Column("product_name")
     private String productName;
     private byte[] image;
     private String description;
@@ -25,18 +23,14 @@ public class Product {
     private BigDecimal price;
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
-        Product product = (Product) o;
-        return getProductId() != null && Objects.equals(getProductId(), product.getProductId());
+        if (!(o instanceof Product product)) return false;
+        return Objects.equals(productId, product.productId);
     }
 
     @Override
-    public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    public int hashCode() {
+        return Objects.hashCode(productId);
     }
 }

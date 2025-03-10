@@ -3,7 +3,7 @@ package org.ivanov.myshop.cart.repository;
 import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.model.Cart;
 import org.ivanov.myshop.cart.proection.ConfirmCart;
-import org.springframework.data.jpa.repository.Query;
+//import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,25 +13,25 @@ import java.util.Optional;
 
 @Repository
 public interface CartRepository extends CrudRepository<Cart, Long> {
-    @Query("""
+    /*@Query("""
             SELECT c
             FROM Cart c
             JOIN FETCH c.orderedProducts ci
             JOIN FETCH ci.product p
             WHERE c.userIp = :userIp AND c.status = :status
             """)
-    Optional<Cart> findByUserIpAndStatus(@Param("userIp") String userIp, @Param("status") Status status);
+    Optional<Cart> findByUserIpAndStatus(@Param("userIp") String userIp, @Param("status") Status status);*/
 
-    @Query("""
+    /*@Query("""
             SELECT c
             FROM Cart c
             JOIN FETCH c.orderedProducts ci
             JOIN FETCH ci.product p
             WHERE c.cartId = :curtId
             """)
-    Optional<Cart> getFullCartById(@Param("curtId") Long curtId);
+    Optional<Cart> getFullCartById(@Param("curtId") Long curtId);*/
 
-    @Query("""
+   /* @Query("""
             SELECT c.cartId as id, c.confirmedDate as  confirmedDate, sum(p.price * ci.count) as cartPrice
             FROM Cart c
             JOIN CartItems ci on  c.cartId = ci.cart.cartId
@@ -40,5 +40,5 @@ public interface CartRepository extends CrudRepository<Cart, Long> {
             AND c.status = org.ivanov.myshop.cart.enums.Status.DONE
             group by c.confirmedDate, c.cartId
             """)
-    List<ConfirmCart> getConfirmCartsByUserIp(@Param("userIp") String userIp);
+    List<ConfirmCart> getConfirmCartsByUserIp(@Param("userIp") String userIp);*/
 }

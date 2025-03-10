@@ -16,46 +16,46 @@ import org.springframework.web.bind.annotation.*;
 public class AdminProductController {
     private final ProductService productService;
 
-    @GetMapping("products/create")
+    /*@GetMapping("products/create")
     public String createProductForm(@ModelAttribute("product") ProductCreateDto productCreateDto) {
         return "create-product";
-    }
+    }*/
 
-    @PostMapping("products")
+    /*@PostMapping("products")
     public String createProduct(@Valid @ModelAttribute("product") ProductCreateDto productCreateDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return "create-product";
         }
         productService.createProduct(productCreateDto);
         return "redirect:/admin/products";
-    }
+    }*/
 
-    @GetMapping("products")
+    /*@GetMapping("products")
     public String getProducts(Model model) {
         model.addAttribute("products", productService.getProducts());
         return "admin-product-list";
     }
-
-    @GetMapping("products/{productId}/update")
+*/
+   /* @GetMapping("products/{productId}/update")
     public String updateProduct(Model model, @PathVariable Long productId, @ModelAttribute("product") UpdateProductDto updateProductDto) {
         updateProductDto.setProductId(productId);
         model.addAttribute("product", updateProductDto);
         return "update-product";
-    }
+    }*/
 
-    @PostMapping(value = "products/update", params = "_method=patch")
+    /*@PostMapping(value = "products/update", params = "_method=patch")
     public String updateProduct(@Valid @ModelAttribute("product") UpdateProductDto updateProductDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return "update-product";
         }
         productService.updateProduct(updateProductDto);
         return "redirect:/admin/products";
-    }
+    }*/
 
-    @PostMapping(value = "products/{productId}", params = "_method=delete")
+    /*@PostMapping(value = "products/{productId}", params = "_method=delete")
     public String deleteProduct(@PathVariable Long productId) {
         productService.deleteProduct(productId);
         return "redirect:/admin/products";
-    }
+    }*/
 
 }

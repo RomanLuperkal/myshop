@@ -1,6 +1,6 @@
 package org.ivanov.myshop.cart.model;
 
-import jakarta.persistence.*;
+//import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.ivanov.myshop.cart.enums.Status;
@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
+//@Entity
 @Getter
 @Setter
 public class Cart {
-    @Id
+/*    @Id
     @Column(name = "curt_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartId;
@@ -28,5 +28,5 @@ public class Cart {
     @Column(nullable = false)
     private Status status = Status.CREATED;
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CartItems> orderedProducts = new HashSet<>();
+    private Set<CartItems> orderedProducts = new HashSet<>();*/
 }

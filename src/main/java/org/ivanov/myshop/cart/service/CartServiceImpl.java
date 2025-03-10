@@ -1,6 +1,6 @@
 package org.ivanov.myshop.cart.service;
 
-import jakarta.transaction.Transactional;
+//import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.enums.Status;
@@ -22,12 +22,12 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CartServiceImpl implements CartService {
+public class CartServiceImpl /*implements CartService*/ {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final CartMapper cartMapper;
 
-    @Override
+    /*@Override
     @Transactional
     public CartResponseDto addToCart(CreateCartDto dto, String userIp) {
         Product product = getProductById(dto.productId());
@@ -53,10 +53,10 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
         return new CartResponseDto("Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. добавлен" +
                 " в корзину");
-    }
+    }*/
 
 
-    @Override
+    /*@Override
     @Transactional
     public CartResponseDto removeFromCart(DeleteCartDto dto, String userIp) {
         Product product = getProductById(dto.productId());
@@ -67,15 +67,15 @@ public class CartServiceImpl implements CartService {
         removeProduct(cart, dto, cartItems);
         cartRepository.save(cart);
         return new CartResponseDto("Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. удален из корзины");
-    }
+    }*/
 
-    @Override
+    /*@Override
     public ActualCartResponseDto getActualCart(String userIp) {
         Cart cart = getActualUsrCart(userIp);
         return cartMapper.mapToActualCartResponseDto(cart.getOrderedProducts());
-    }
+    }*/
 
-    @Override
+    /*@Override
     public void deleteProductFromCart(Long productId, String userIp) {
         Product product = getProductById(productId);
         Cart cart = getActualUsrCart(userIp);
@@ -83,16 +83,16 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет"));
         cart.getOrderedProducts().remove(cartItems);
         cartRepository.save(cart);
-    }
+    }*/
 
-    @Override
+    /*@Override
     public ConfirmCartResponseDto getConfirmCart(Long cartId) {
         Cart cart = cartRepository.getFullCartById(cartId)
                 .orElseThrow(() -> new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины c id="+cartId + " не существует"));
         return new ConfirmCartResponseDto(cartMapper.mapToPurchasedProductDtoList(cart.getOrderedProducts()));
-    }
+    }*/
 
-    @Override
+    /*@Override
     @Transactional
     public Long confirmCart(String userIp) {
         Cart cart = getActualUsrCart(userIp);
@@ -100,47 +100,47 @@ public class CartServiceImpl implements CartService {
         cart.setConfirmedDate(LocalDateTime.now());
         cart.setStatus(Status.DONE);
         return cart.getCartId();
-    }
+    }*/
 
-    @Override
+    /*@Override
     public ListConfirmCartDto getConfirmCartList(String userIp) {
         List<ConfirmCart> confirmCarts = cartRepository.getConfirmCartsByUserIp(userIp);
         return cartMapper.mapToConfirmCartDto(confirmCarts);
-    }
+    }*/
 
-    private Product getProductById(Long productId) {
+    /*private Product getProductById(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ProductException(HttpStatus.NOT_FOUND, "Продукта с id = " + productId + " не существует"));
-    }
+    }*/
 
-    private void removeProduct(Cart cart, DeleteCartDto dto, CartItems cartItems) {
+    /*private void removeProduct(Cart cart, DeleteCartDto dto, CartItems cartItems) {
         if (cartItems.getCount() <= dto.count()) {
             cart.getOrderedProducts().remove(cartItems);
         } else {
             cartItems.setCount(cartItems.getCount() - dto.count());
         }
-    }
+    }*/
 
-    private void prepareOrder(Cart cart, Product product, CreateCartDto dto) {
+    /*private void prepareOrder(Cart cart, Product product, CreateCartDto dto) {
         CartItems cartItems = new CartItems();
         cartItems.setCart(cart);
         cartItems.setProduct(product);
         cartItems.setCount(dto.count());
         cart.getOrderedProducts().add(cartItems);
-    }
+    }*/
 
-    private void checkTotalCount(Product product, CreateCartDto dto, CartItems cartItems) {
+    /*private void checkTotalCount(Product product, CreateCartDto dto, CartItems cartItems) {
         if (product.getCount() < (dto.count() + cartItems.getCount())) {
             throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
         }
-    }
+    }*/
 
-    private Cart getActualUsrCart(String userIp) {
+    /*private Cart getActualUsrCart(String userIp) {
         return cartRepository.findByUserIpAndStatus(userIp, Status.CREATED)
                 .orElseGet(Cart::new);
-    }
+    }*/
 
-    private void processCart(Cart cart) {
+    /*private void processCart(Cart cart) {
         cart.getOrderedProducts().forEach(cartItem -> {
             Long stockCount = cartItem.getProduct().getCount();
             int requestedCount = cartItem.getCount();
@@ -152,5 +152,5 @@ public class CartServiceImpl implements CartService {
             // Обновляем количество товара на складе
             cartItem.getProduct().setCount(stockCount - requestedCount);
         });
-    }
+    }*/
 }
