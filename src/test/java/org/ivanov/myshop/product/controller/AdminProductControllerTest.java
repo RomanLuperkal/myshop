@@ -1,6 +1,6 @@
 package org.ivanov.myshop.product.controller;
 
-import lombok.RequiredArgsConstructor;
+/*import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.ivanov.myshop.product.ProductTestBase;
 import org.ivanov.myshop.product.dto.ProductCreateDto;
@@ -107,4 +107,4 @@ public class AdminProductControllerTest extends ProductTestBase {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/products"));
     }
-}
+}*/

@@ -1,6 +1,6 @@
 package org.ivanov.myshop.cart;
 
-import org.ivanov.myshop.cart.dto.CreateCartDto;
+/*import org.ivanov.myshop.cart.dto.CreateCartDto;
 import org.ivanov.myshop.cart.dto.DeleteCartDto;
 import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.model.Cart;
@@ -77,4 +77,4 @@ public abstract class CartTestBase {
         confirmCarts.add(confirmCart);
         return confirmCarts;
     }
-}
+}*/

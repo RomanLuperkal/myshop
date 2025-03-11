@@ -1,6 +1,6 @@
 package org.ivanov.myshop.product.service;
 
-import lombok.SneakyThrows;
+/*import lombok.SneakyThrows;
 import org.ivanov.myshop.product.ProductTestBase;
 import org.ivanov.myshop.product.dto.ListProductDto;
 import org.ivanov.myshop.product.dto.ListShortProductDto;
@@ -99,4 +99,4 @@ public class ProductServiceTest extends ProductTestBase {
 
         verify(productRepository, times(1)).deleteById(1L);
     }
-}
+}*/

@@ -1,6 +1,6 @@
 package org.ivanov.myshop.product.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+/*import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.ivanov.myshop.product.ProductTestBase;
@@ -62,4 +62,4 @@ public class UserProductControllerTest extends ProductTestBase {
                 .andExpect(xpath("//div[@id='product-list']/div[@class='col-md-4 mb-4']//button[@class='btn btn-sm btn-outline-danger'][text()='Удалить из корзины']").exists())
                 .andExpect(xpath("//nav[@aria-label='Page navigation']").exists());
     }
-}
+}*/

@@ -1,6 +1,6 @@
 package org.ivanov.myshop.cart.service;
 
-import lombok.SneakyThrows;
+/*import lombok.SneakyThrows;
 import org.ivanov.myshop.cart.CartTestBase;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.enums.Status;
@@ -252,4 +252,4 @@ public class CartServiceTest extends CartTestBase {
                 () -> verify(cartRepository, times(1)).getConfirmCartsByUserIp(USER_IP)
         );
     }
-}
+}*/

@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface ProductRepository extends R2dbcRepository<Product, Long> {
     @Query("""
-            SELECT p FROM Product p
+            SELECT * FROM Product p
             WHERE :productName IS NULL
             OR :productName = ''
             OR product_name LIKE LOWER('%' || :productName || '%')
@@ -20,7 +20,7 @@ public interface ProductRepository extends R2dbcRepository<Product, Long> {
     Flux<Product> findByProductNameContainingIgnoreCase(@Param("productName") String productName, @Param("size") Integer size, @Param("offset") Long offset);
 
     @Query("""
-            SELECT * FROM Product p
+            SELECT count(*) FROM Product p
             WHERE :productName IS NULL
             OR :productName = ''
             OR product_name LIKE LOWER('%' || :productName || '%')

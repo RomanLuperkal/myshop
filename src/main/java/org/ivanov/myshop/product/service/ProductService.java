@@ -5,15 +5,16 @@ import org.ivanov.myshop.product.dto.ListShortProductDto;
 import org.ivanov.myshop.product.dto.ProductCreateDto;
 import org.ivanov.myshop.product.dto.UpdateProductDto;
 import org.springframework.data.domain.Pageable;
+import reactor.core.publisher.Mono;
 
 public interface ProductService {
-    void createProduct(ProductCreateDto productCreateDto);
+    //void createProduct(ProductCreateDto productCreateDto);
 
-    ListProductDto getProducts(Pageable pageable, String search);
+    Mono<ListProductDto> getProducts(Pageable pageable, String search);
 
-    ListShortProductDto getProducts();
+    //ListShortProductDto getProducts();
 
-    void updateProduct(UpdateProductDto updateProductDto);
+    //void updateProduct(UpdateProductDto updateProductDto);
 
-    void deleteProduct(Long id);
+    //void deleteProduct(Long id);
 }
