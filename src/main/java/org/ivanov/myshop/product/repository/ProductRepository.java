@@ -9,7 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface ProductRepository extends R2dbcRepository<Product, Long> {
+public interface ProductRepository extends R2dbcRepository<Product, Long>,  CustomProductRepository {
     @Query("""
             SELECT * FROM Product p
             WHERE :productName IS NULL

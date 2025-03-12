@@ -30,45 +30,31 @@ public class UserProductController {
                                  @RequestParam(required = false) List<String> sort, @RequestParam(required = false) String search) {
         Sort sortObj = parseSortParameters(sort);
 
-        // Создаем Pageable с учетом сортировки
         Pageable pageable = PageRequest.of(page, size, sortObj);
         Mono<ListProductDto> products = productService.getProducts(pageable, search);
         Rendering rendering = Rendering.view("product-list").modelAttribute("products", products).build();
-        //model.addAttribute("products", productService.getProducts(pageable, search));
         return rendering;
     }
 
-    private Sort parseSortParameters(List<String> sort) {
-        if (sort == null || sort.isEmpty()) {
-            return Sort.unsorted(); // Если сортировка не указана, возвращаем пустой Sort
+    private Sort parseSortParameters(List<String> sortParams) {
+        if (sortParams == null || sortParams.isEmpty()) {
+            return Sort.unsorted();
         }
 
         List<Sort.Order> orders = new ArrayList<>();
-        for (String sortParam : sort) {
-            // Разбиваем на поле и направление
-            String[] parts = sortParam.split(",");
-            if (parts.length != 2) {
-                throw new IllegalArgumentException("Invalid sort parameter. Expected format: field,direction");
+
+        if (sortParams.get(1).contains(",")) {
+            for (String sortParam : sortParams) {
+                String[] sort = sortParam.split(",");
+                orders.add(new Sort.Order(Sort.Direction.fromString(sort[1]), sort[0]));
             }
-
-            String field = parts[0].trim();
-            String directionStr = parts[1].trim();
-
-            // Проверяем, что поле не пустое
-            if (field.isEmpty()) {
-                throw new IllegalArgumentException("Sort field cannot be empty");
-            }
-
-            // Проверяем, что направление сортировки допустимо
-            if (!directionStr.equalsIgnoreCase("asc") && !directionStr.equalsIgnoreCase("desc")) {
-                throw new IllegalArgumentException("Invalid sort direction: " + directionStr + ". Expected 'asc' or 'desc'");
-            }
-
-            // Создаем объект Sort.Order
-            Sort.Direction direction = Sort.Direction.fromString(directionStr);
-            orders.add(new Sort.Order(direction, field));
+            return Sort.by(orders);
+        } else if (sortParams.contains("price") || sortParams.contains("productName")) {
+            orders.add(new Sort.Order(Sort.Direction.fromString(sortParams.get(1)), sortParams.get(0)));
+            return Sort.by(orders);
         }
 
-        return Sort.by(orders);
+        throw new IllegalArgumentException("Invalid sort params");
+
     }
 }
