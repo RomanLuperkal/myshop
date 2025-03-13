@@ -25,15 +25,15 @@ public class UserProductController {
     private final ProductService productService;
 
     @GetMapping
-    public Rendering getProducts(@RequestParam(defaultValue = "0") int page,
+    public Mono<Rendering> getProducts(@RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "10") int size,
                                  @RequestParam(required = false) List<String> sort, @RequestParam(required = false) String search) {
         Sort sortObj = parseSortParameters(sort);
 
         Pageable pageable = PageRequest.of(page, size, sortObj);
         Mono<ListProductDto> products = productService.getProducts(pageable, search);
-        Rendering rendering = Rendering.view("product-list").modelAttribute("products", products).build();
-        return rendering;
+        Rendering r = Rendering.view("product-list").modelAttribute("products", products).build();
+        return Mono.just(r);
     }
 
     private Sort parseSortParameters(List<String> sortParams) {

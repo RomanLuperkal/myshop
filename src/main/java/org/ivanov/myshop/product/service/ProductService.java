@@ -8,13 +8,13 @@ import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Mono;
 
 public interface ProductService {
-    //void createProduct(ProductCreateDto productCreateDto);
+    Mono<Void> createProduct(ProductCreateDto productCreateDto);
 
     Mono<ListProductDto> getProducts(Pageable pageable, String search);
 
-    //ListShortProductDto getProducts();
+    Mono<ListShortProductDto> getProducts();
 
-    //void updateProduct(UpdateProductDto updateProductDto);
+    Mono<Void> updateProduct(UpdateProductDto updateProductDto);
 
     //void deleteProduct(Long id);
 }

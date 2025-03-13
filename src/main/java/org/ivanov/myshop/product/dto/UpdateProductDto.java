@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.codec.multipart.Part;
 
 import java.math.BigDecimal;
 
@@ -14,7 +14,7 @@ public class UpdateProductDto {
     private Long productId;
     @NotBlank(message = "Имя товара не может быть пустым")
     private String productName;
-    private MultipartFile image;
+    private Part image;
     @NotBlank(message = "Описание товара не может быть пустым")
     private String description;
     @Positive(message = "Некорректное кол-во товара")

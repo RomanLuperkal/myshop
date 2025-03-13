@@ -30,11 +30,12 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
 
-    /*@Override
-    public void createProduct(ProductCreateDto productCreateDto) {
+    @Override
+    public Mono<Void> createProduct(ProductCreateDto productCreateDto) {
         Product product = productMapper.productCreateDtoToProduct(productCreateDto);
-        productRepository.save(product);
-    }*/
+        Mono<byte[]> image = productMapper.getBytesFromPart(productCreateDto.image());
+        return image.doOnNext(product::setImage).then(Mono.defer(() -> productRepository.save(product).then()));
+    }
 
     @Override
     public Mono<ListProductDto> getProducts(Pageable pageable, String search) {
@@ -51,19 +52,24 @@ public class ProductServiceImpl implements ProductService {
         });
     }
 
-    /*@Override
-    public ListShortProductDto getProducts() {
-        return productMapper.mapToListShortProductDto(productRepository.findAll());
-    }*/
+    @Override
+    public Mono<ListShortProductDto> getProducts() {
+        return productRepository.findAll().collectList().map(productMapper::mapToListShortProductDto);
+    }
 
-    /*@Override
-    @Transactional
-    public void updateProduct(UpdateProductDto updateProductDto) {
-        Product product = productRepository.findById(updateProductDto.getProductId())
-                .orElseThrow(() -> new ProductException(HttpStatus.NOT_FOUND, "Товара с id=" + updateProductDto.getProductId() + " не существует"));
+    @Override
+    public Mono<Void> updateProduct(UpdateProductDto updateProductDto) {
+        return productRepository.findById(updateProductDto.getProductId())
+                .switchIfEmpty(Mono.error(new ProductException(HttpStatus.NOT_FOUND, "Товара с id=" + updateProductDto.getProductId() + " не существует")))
+                .flatMap(existingProduct -> {
+                    productMapper.mapToProduct(existingProduct, updateProductDto);
 
-        productMapper.mapToProduct(product, updateProductDto);
-    }*/
+                    return productMapper.getBytesFromPart(updateProductDto.getImage())
+                            .doOnNext(existingProduct::setImage)
+                            .then(productRepository.save(existingProduct));
+                })
+                .then();
+    }
 
     /*@Override
     public void deleteProduct(Long id) {

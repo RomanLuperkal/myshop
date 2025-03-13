@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.result.view.Rendering;
+import reactor.core.publisher.Mono;
 
 @Controller
 @RequestMapping("/admin")
@@ -16,41 +18,41 @@ import org.springframework.web.bind.annotation.*;
 public class AdminProductController {
     private final ProductService productService;
 
-    /*@GetMapping("products/create")
-    public String createProductForm(@ModelAttribute("product") ProductCreateDto productCreateDto) {
-        return "create-product";
-    }*/
-
-    /*@PostMapping("products")
-    public String createProduct(@Valid @ModelAttribute("product") ProductCreateDto productCreateDto, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return "create-product";
-        }
-        productService.createProduct(productCreateDto);
-        return "redirect:/admin/products";
-    }*/
-
-    /*@GetMapping("products")
-    public String getProducts(Model model) {
-        model.addAttribute("products", productService.getProducts());
-        return "admin-product-list";
+    @GetMapping("products/create")
+    public Mono<Rendering> createProductForm(@ModelAttribute("product") ProductCreateDto productCreateDto) {
+        return Mono.just(Rendering.view("create-product").build());
     }
-*/
-   /* @GetMapping("products/{productId}/update")
-    public String updateProduct(Model model, @PathVariable Long productId, @ModelAttribute("product") UpdateProductDto updateProductDto) {
-        updateProductDto.setProductId(productId);
-        model.addAttribute("product", updateProductDto);
-        return "update-product";
-    }*/
 
-    /*@PostMapping(value = "products/update", params = "_method=patch")
-    public String updateProduct(@Valid @ModelAttribute("product") UpdateProductDto updateProductDto, BindingResult bindingResult) {
+    @PostMapping("products")
+    public Mono<Rendering> createProduct(@Valid @ModelAttribute("product") ProductCreateDto productCreateDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return "update-product";
+            return Mono.just(Rendering.view("create-product").build());
         }
-        productService.updateProduct(updateProductDto);
-        return "redirect:/admin/products";
-    }*/
+        return productService.createProduct(productCreateDto)
+                .thenReturn(Rendering.redirectTo("/admin/products").build());
+    }
+
+    @GetMapping("products")
+    public Mono<Rendering> getProducts() {
+        Rendering r = Rendering.view("admin-product-list")
+                .modelAttribute("products", productService.getProducts()).build();
+        return Mono.just(r);
+    }
+    @GetMapping("products/{productId}/update")
+    public Mono<Rendering> updateProduct(@PathVariable Long productId, @ModelAttribute("product") UpdateProductDto updateProductDto) {
+        updateProductDto.setProductId(productId);
+        Rendering r = Rendering.view("update-product").modelAttribute("product", updateProductDto).build();
+        return Mono.just(r);
+    }
+
+    @PostMapping(value = "products/update", params = "_method=patch")
+    public Mono<Rendering> updateProduct(@Valid @ModelAttribute("product") UpdateProductDto updateProductDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            Rendering r = Rendering.view("update-product").build();
+            return Mono.just(r);
+        }
+        return productService.updateProduct(updateProductDto).thenReturn(Rendering.redirectTo("/admin/products").build());
+    }
 
     /*@PostMapping(value = "products/{productId}", params = "_method=delete")
     public String deleteProduct(@PathVariable Long productId) {
