@@ -29,20 +29,18 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="product : ${products.products}">
+        <tr th:each="product : ${products.products}" th:attr="data-product-id=${product.productId}">
             <td th:text="${product.productName}"></td>
             <td th:text="${product.count}"></td>
             <td th:text="${product.price}"></td>
             <td>
                 <a th:href="@{/admin/products/{id}/update(id=${product.productId})}" class="btn btn-warning btn-sm">Изменить</a>
-                <form th:action="@{/admin/products/{id}(id=${product.productId})}" method="post" style="display: inline;">
-                    <input type="hidden" name="_method" value="delete" />
-                    <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
-                </form>
+                <button th:onclick="'deleteProduct(' + ${product.productId} + ')'" class="btn btn-danger btn-sm">Удалить</button>
             </td>
         </tr>
         </tbody>
     </table>
 </div>
+<script src="/js/admin-product-list.js"></script>
 </body>
 </html>

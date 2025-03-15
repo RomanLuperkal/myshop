@@ -1,10 +1,11 @@
 package org.ivanov.myshop.cart.controller;
 
-//import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.service.CartService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,14 +14,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/carts")
 @RequiredArgsConstructor
 public class CartController {
-    //private final CartService cartService;
+    private final CartService cartService;
 
 
-    /*@PostMapping("/add")
+    @PostMapping("/add")
     @ResponseBody
-    public ResponseEntity<CartResponseDto> addToCart(@RequestBody CreateCartDto dto, HttpServletRequest request) {
-        return ResponseEntity.ok(cartService.addToCart(dto, request.getRemoteAddr()));
-    }*/
+    public ResponseEntity<CartResponseDto> addToCart(@RequestBody CreateCartDto dto, ServerHttpRequest request) {
+        String hostAddress = request.getRemoteAddress().getAddress().getHostAddress();
+        return ResponseEntity.ok(cartService.addToCart(dto, hostAddress));
+    }
 
     /*@DeleteMapping("/deleteItem")
     @ResponseBody

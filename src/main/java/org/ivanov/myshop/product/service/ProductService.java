@@ -16,5 +16,5 @@ public interface ProductService {
 
     Mono<Void> updateProduct(UpdateProductDto updateProductDto);
 
-    //void deleteProduct(Long id);
+    Mono<Void> deleteProduct(Long id);
 }

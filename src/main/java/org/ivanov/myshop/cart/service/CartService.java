@@ -1,9 +1,10 @@
 package org.ivanov.myshop.cart.service;
 
 import org.ivanov.myshop.cart.dto.*;
+import reactor.core.publisher.Mono;
 
 public interface CartService {
-    //CartResponseDto addToCart(CreateCartDto dto, String userIp);
+    Mono<CartResponseDto> addToCart(CreateCartDto dto, String userIp);
 
     //CartResponseDto removeFromCart(DeleteCartDto dto, String userIp);
 

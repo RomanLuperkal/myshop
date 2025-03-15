@@ -71,9 +71,9 @@ public class ProductServiceImpl implements ProductService {
                 .then();
     }
 
-    /*@Override
-    public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
-    }*/
+    @Override
+    public Mono<Void> deleteProduct(Long id) {
+        return productRepository.deleteById(id);
+    }
 
 }

@@ -1,6 +1,5 @@
 package org.ivanov.myshop.cart.service;
 
-//import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.enums.Status;
@@ -15,6 +14,8 @@ import org.ivanov.myshop.product.model.Product;
 import org.ivanov.myshop.product.repository.ProductRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,14 +24,14 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
-    /*private final CartRepository cartRepository;
+    private final CartRepository cartRepository;
     private final ProductRepository productRepository;
-    private final CartMapper cartMapper;*/
+    private final CartMapper cartMapper;
 
-    /*@Override
+    @Override
     @Transactional
-    public CartResponseDto addToCart(CreateCartDto dto, String userIp) {
-        Product product = getProductById(dto.productId());
+    public Mono<CartResponseDto> addToCart(CreateCartDto dto, String userIp) {
+        /*Product product = getProductById(dto.productId());
         if (product.getCount() < dto.count()) {
             throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
         }
@@ -52,8 +53,12 @@ public class CartServiceImpl implements CartService {
 
         cartRepository.save(cart);
         return new CartResponseDto("Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. добавлен" +
-                " в корзину");
-    }*/
+                " в корзину");*/
+        Mono<Product> product = getProductById(dto.productId());
+        if (product.getCount() < dto.count()) {
+            throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
+        }
+    }
 
 
     /*@Override
@@ -108,10 +113,11 @@ public class CartServiceImpl implements CartService {
         return cartMapper.mapToConfirmCartDto(confirmCarts);
     }*/
 
-    /*private Product getProductById(Long productId) {
-        return productRepository.findById(productId)
-                .orElseThrow(() -> new ProductException(HttpStatus.NOT_FOUND, "Продукта с id = " + productId + " не существует"));
-    }*/
+    private Mono<Product> getProductById(Long productId) {
+        return productRepository.findById(productId).switchIfEmpty(Mono.error((new ProductException(HttpStatus.NOT_FOUND, "Продукта с id = " + productId + " не существует"))));
+        /*return productRepository.findById(productId)
+                .orElseThrow(() -> new ProductException(HttpStatus.NOT_FOUND, "Продукта с id = " + productId + " не существует"));*/
+    }
 
     /*private void removeProduct(Cart cart, DeleteCartDto dto, CartItems cartItems) {
         if (cartItems.getCount() <= dto.count()) {

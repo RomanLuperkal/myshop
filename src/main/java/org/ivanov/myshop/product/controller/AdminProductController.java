@@ -45,7 +45,7 @@ public class AdminProductController {
         return Mono.just(r);
     }
 
-    @PostMapping(value = "products/update", params = "_method=patch")
+    @PostMapping(value = "products/update")
     public Mono<Rendering> updateProduct(@Valid @ModelAttribute("product") UpdateProductDto updateProductDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Rendering r = Rendering.view("update-product").build();
@@ -54,10 +54,8 @@ public class AdminProductController {
         return productService.updateProduct(updateProductDto).thenReturn(Rendering.redirectTo("/admin/products").build());
     }
 
-    /*@PostMapping(value = "products/{productId}", params = "_method=delete")
-    public String deleteProduct(@PathVariable Long productId) {
-        productService.deleteProduct(productId);
-        return "redirect:/admin/products";
-    }*/
-
+    @DeleteMapping(value = "products/{productId}")
+    public Mono<Rendering> deleteProduct(@PathVariable Long productId) {
+        return productService.deleteProduct(productId).thenReturn(Rendering.redirectTo("/admin/products").build());
+    }
 }

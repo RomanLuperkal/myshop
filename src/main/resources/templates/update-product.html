@@ -51,7 +51,6 @@
     <h2>Добавить товар</h2>
 
     <form th:action="@{/admin/products/update}" method="post" enctype="multipart/form-data" th:object="${product}">
-        <input type="hidden" name="_method" value="patch"></input>
         <input type="hidden" th:field="*{productId}" />
         <div class="mb-3">
             <label for="name" class="form-label">Название товара:</label>
