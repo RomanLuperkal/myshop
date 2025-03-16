@@ -29,7 +29,7 @@ public class CartServiceImpl implements CartService {
     private final CartMapper cartMapper;
 
     @Override
-    @Transactional
+    //@Transactional
     public Mono<CartResponseDto> addToCart(CreateCartDto dto, String userIp) {
         /*Product product = getProductById(dto.productId());
         if (product.getCount() < dto.count()) {
@@ -54,10 +54,14 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
         return new CartResponseDto("Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. добавлен" +
                 " в корзину");*/
-        Mono<Product> product = getProductById(dto.productId());
-        if (product.getCount() < dto.count()) {
-            throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
-        }
+        Mono<Product> product = getProductById(dto.productId()).flatMap(p -> {
+            if (p.getCount() < dto.count()) {
+                return Mono.error(new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе"));
+            }
+            return Mono.just(p);
+        });
+        Mono<Cart> cart = cartRepository.findByUserIpAndStatus(userIp, Status.CREATED);
+        return Mono.just(new CartResponseDto(""));
     }
 
 

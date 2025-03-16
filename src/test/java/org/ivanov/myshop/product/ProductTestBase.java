@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public abstract class ProductTestBase {
-    private final static MockMultipartFile multipartFile = createMultipartFile("test_image.jpg");
+    /*private final static MockMultipartFile multipartFile = createMultipartFile("test_image.jpg");
 
     @Autowired
     private ProductMapper productMapper;
@@ -65,5 +65,5 @@ public abstract class ProductTestBase {
         var fileContent = Files.readAllBytes(file.toPath());
 
         return new MockMultipartFile("image", file.getName(), "image/jpeg", fileContent);
-    }
+    }*/
 }

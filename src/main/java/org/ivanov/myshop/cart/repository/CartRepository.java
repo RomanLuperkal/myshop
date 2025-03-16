@@ -4,6 +4,7 @@ import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.model.Cart;
 import org.ivanov.myshop.cart.proection.ConfirmCart;
 //import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CartRepository extends CrudRepository<Cart, Long> {
+public interface CartRepository extends R2dbcRepository<Cart, Long>, CustomCartRepository {
     /*@Query("""
             SELECT c
             FROM Cart c
