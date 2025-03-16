@@ -8,6 +8,7 @@ import org.ivanov.myshop.cart.model.Cart;
 import org.ivanov.myshop.cart.proection.ConfirmCart;
 import org.ivanov.myshop.cart.repository.CartRepository;
 import org.ivanov.myshop.cart_item.model.CartItems;
+import org.ivanov.myshop.cart_item.repository.CartItemRepository;
 import org.ivanov.myshop.handler.exception.CartException;
 import org.ivanov.myshop.handler.exception.ProductException;
 import org.ivanov.myshop.product.model.Product;
@@ -27,41 +28,40 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final CartMapper cartMapper;
+    private final CartItemRepository cartItemRepository;
 
     @Override
-    //@Transactional
+    @Transactional
     public Mono<CartResponseDto> addToCart(CreateCartDto dto, String userIp) {
-        /*Product product = getProductById(dto.productId());
-        if (product.getCount() < dto.count()) {
-            throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
-        }
-
-        Cart cart = cartRepository.findByUserIpAndStatus(userIp, Status.CREATED).orElseGet(Cart::new);
-        if (cart.getOrderedProducts().isEmpty()) {
-            cart.setUserIp(userIp);
-            prepareOrder(cart, product, dto);
-        } else {
-            Optional<CartItems> curtItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst();
-            curtItems.ifPresentOrElse(
-                    existingItem -> {
-                        checkTotalCount(product, dto, existingItem);
-                        existingItem.setCount(existingItem.getCount() + dto.count());
-                    },
-                    () -> prepareOrder(cart, product, dto)
-            );
-        }
-
-        cartRepository.save(cart);
-        return new CartResponseDto("Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. добавлен" +
-                " в корзину");*/
-        Mono<Product> product = getProductById(dto.productId()).flatMap(p -> {
+        Mono<Product> findProduct = getProductById(dto.productId()).flatMap(p -> {
             if (p.getCount() < dto.count()) {
                 return Mono.error(new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе"));
             }
             return Mono.just(p);
         });
-        Mono<Cart> cart = cartRepository.findByUserIpAndStatus(userIp, Status.CREATED);
-        return Mono.just(new CartResponseDto(""));
+        Mono<Cart> actualCart = cartRepository.findByUserIpAndStatus(userIp, Status.CREATED);
+        return Mono.zip(findProduct, actualCart).flatMap(tuple -> {
+            Cart cart = tuple.getT2();
+            Product product = tuple.getT1();
+            if (cart.getOrderedProducts().isEmpty()) {
+                cart.setUserIp(userIp);
+                prepareOrder(cart, product, dto);
+            } else {
+                Optional<CartItems> curtItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst();
+                curtItems.ifPresentOrElse(
+                        existingItem -> {
+                            checkTotalCount(product, dto, existingItem);
+                            existingItem.setCount(existingItem.getCount() + dto.count());
+                        },
+                        () -> prepareOrder(cart, product, dto)
+                );
+            }
+
+            return cartRepository.save(cart)
+                    .thenMany(cartItemRepository.saveAll(cart.getOrderedProducts()))
+                    .then(Mono.just(new CartResponseDto("Товар " + product.getProductName() +
+                            " в количестве " + dto.count() + " шт. добавлен в корзину")));
+        });
     }
 
 
@@ -131,19 +131,19 @@ public class CartServiceImpl implements CartService {
         }
     }*/
 
-    /*private void prepareOrder(Cart cart, Product product, CreateCartDto dto) {
+    private void prepareOrder(Cart cart, Product product, CreateCartDto dto) {
         CartItems cartItems = new CartItems();
         cartItems.setCart(cart);
         cartItems.setProduct(product);
         cartItems.setCount(dto.count());
         cart.getOrderedProducts().add(cartItems);
-    }*/
+    }
 
-    /*private void checkTotalCount(Product product, CreateCartDto dto, CartItems cartItems) {
+    private void checkTotalCount(Product product, CreateCartDto dto, CartItems cartItems) {
         if (product.getCount() < (dto.count() + cartItems.getCount())) {
             throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
         }
-    }*/
+    }
 
     /*private Cart getActualUsrCart(String userIp) {
         return cartRepository.findByUserIpAndStatus(userIp, Status.CREATED)

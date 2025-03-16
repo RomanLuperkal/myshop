@@ -13,11 +13,9 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -39,8 +37,8 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
                    p.count  AS product_count,
                    p.price
             FROM cart c
-                     JOIN cart_items ci ON c.curt_id = ci.curt_id
-                     JOIN product p ON ci.product_id = p.product_id
+                     LEFT JOIN cart_items ci ON c.curt_id = ci.curt_id
+                     LEFT JOIN product p ON ci.product_id = p.product_id
             WHERE c.user_ip = :userIp
               AND c.status = :status
             """;
@@ -67,21 +65,23 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
         Cart cart = mapCart(firstRow);
 
         // Группируем данные по элементам корзины
-        Map<Long, CartItems> itemsMap = new HashMap<>();
+        Set<CartItems> cartItems = new HashSet<>();
         for (Map<String, Object> row : rows) {
             CartItems item = mapCartItem(row);
             if (item != null) {
-                itemsMap.putIfAbsent(item.getCurtItemId(), item);
+                item.setCartId(cart.getCartId());
                 // Добавляем связанный продукт
                 Product product = mapProduct(row);
                 if (product != null) {
                     item.setProduct(product);
+                    item.setProductId(product.getProductId());
                 }
+                cartItems.add(item);
             }
         }
 
         // Устанавливаем элементы корзины
-        cart.setOrderedProducts(new HashSet<>(itemsMap.values()));
+        cart.setOrderedProducts(cartItems);
         return cart;
     }
 
@@ -107,17 +107,20 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
     }
 
     private Product mapProduct(Map<String, Object> row) {
-        Long productId = (Long) row.get("product_product_id");
+        Long productId = (Long) row.get("product_id");
         if (productId == null) {
             return null; // Если нет связанных продуктов
         }
         Product product = new Product();
         product.setProductId(productId);
         product.setProductName((String) row.get("product_name"));
-        product.setImage((byte[]) row.get("image"));
+        ByteBuffer imageBuffer = (ByteBuffer) row.get("image");
+        byte[] imageBytes = new byte[imageBuffer.remaining()];
+        imageBuffer.get(imageBytes);
+        product.setImage(imageBytes);
         product.setDescription((String) row.get("description"));
         product.setCount((Long) row.get("product_count"));
-        product.setPrice(new BigDecimal((String)row.get("price")));
+        product.setPrice(new BigDecimal(row.get("price").toString()));
         return product;
     }
     }

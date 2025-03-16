@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.ivanov.myshop.cart.model.Cart;
 import org.ivanov.myshop.product.model.Product;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -15,11 +16,13 @@ public class CartItems {
     @Id
     @Column("curt_item_id")
     private Long curtItemId;
-   // @ManyToOne
-   // @JoinColumn(name = "curt_id")
+   @Column("curt_id")
+    private Long cartId;
+    @Transient
     private Cart cart;
-   // @ManyToOne
-   // @JoinColumn(name = "product_id")
+    @Column("product_id")
+    private Long productId;
+    @Transient
     private Product product;
     private Integer count;
 

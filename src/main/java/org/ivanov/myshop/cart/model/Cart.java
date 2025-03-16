@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart_item.model.CartItems;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 
 import java.time.LocalDateTime;
@@ -25,5 +26,6 @@ public class Cart {
     private LocalDateTime confirmedDate;
     private Status status = Status.CREATED;
     //@OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Transient
     private Set<CartItems> orderedProducts = new HashSet<>();
 }
