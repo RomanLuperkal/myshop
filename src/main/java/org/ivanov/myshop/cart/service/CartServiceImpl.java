@@ -65,34 +65,48 @@ public class CartServiceImpl implements CartService {
     }
 
 
-    /*@Override
+    @Override
     @Transactional
-    public CartResponseDto removeFromCart(DeleteCartDto dto, String userIp) {
-        Product product = getProductById(dto.productId());
-        Cart cart = getActualUsrCart(userIp);
+    public Mono<CartResponseDto> removeFromCart(DeleteCartDto dto, String userIp) {
+        Mono<Product> productMono = getProductById(dto.productId());
+        Mono<Cart> cartMono = getActualUsrCart(userIp);
+        return Mono.zip(productMono, cartMono)
+                .flatMap(tuple -> {
+                    Product product = tuple.getT1();
+                    Cart cart = tuple.getT2();
 
-        CartItems cartItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product))
-                .findFirst().orElseThrow(() ->  new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет"));
-        removeProduct(cart, dto, cartItems);
-        cartRepository.save(cart);
-        return new CartResponseDto("Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. удален из корзины");
-    }*/
+                    return Mono.justOrEmpty(cart.getOrderedProducts().stream()
+                                    .filter(c -> c.getProduct().equals(product))
+                                    .findFirst())
+                            .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
+                            .flatMap(cartItems ->
+                                    removeProduct(cart, dto, cartItems) // Вызов реактивного метода
+                                            .thenReturn(new CartResponseDto("Товар " + product.getProductName() +
+                                                    " в количестве " + dto.count() + " шт. удален из корзины"))
+                            );
+                });
+    }
 
-    /*@Override
-    public ActualCartResponseDto getActualCart(String userIp) {
-        Cart cart = getActualUsrCart(userIp);
-        return cartMapper.mapToActualCartResponseDto(cart.getOrderedProducts());
-    }*/
+    @Override
+    public Mono<ActualCartResponseDto> getActualCart(String userIp) {
+        Mono<Cart> cart = getActualUsrCart(userIp);
+        return cart.map(c -> cartMapper.mapToActualCartResponseDto(c.getOrderedProducts()));
+    }
 
-    /*@Override
-    public void deleteProductFromCart(Long productId, String userIp) {
-        Product product = getProductById(productId);
-        Cart cart = getActualUsrCart(userIp);
-        CartItems cartItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst()
-                .orElseThrow(() -> new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет"));
-        cart.getOrderedProducts().remove(cartItems);
-        cartRepository.save(cart);
-    }*/
+    @Override
+    public Mono<Void> deleteProductFromCart(Long productId, String userIp) {
+        Mono<Product> productMono = getProductById(productId);
+        Mono<Cart> cartMono = getActualUsrCart(userIp);
+        return Mono.zip(productMono, cartMono).flatMap(tuple -> {
+            Product product = tuple.getT1();
+            Cart cart = tuple.getT2();
+            return Mono.justOrEmpty(cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst())
+                    .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
+                    .doOnNext(cartItems -> System.out.println(cartItems.getCurtItemId() + ", " + cartItems.getCartId() + ", " + cartItems.getProductId()))
+                    .flatMap(cartItemRepository::delete);
+        });
+        }
+
 
     /*@Override
     public ConfirmCartResponseDto getConfirmCart(Long cartId) {
@@ -118,22 +132,27 @@ public class CartServiceImpl implements CartService {
     }*/
 
     private Mono<Product> getProductById(Long productId) {
-        return productRepository.findById(productId).switchIfEmpty(Mono.error((new ProductException(HttpStatus.NOT_FOUND, "Продукта с id = " + productId + " не существует"))));
-        /*return productRepository.findById(productId)
-                .orElseThrow(() -> new ProductException(HttpStatus.NOT_FOUND, "Продукта с id = " + productId + " не существует"));*/
+        return productRepository.findById(productId)
+                .switchIfEmpty(Mono.error((new ProductException(HttpStatus.NOT_FOUND, "Продукта с id = " + productId + " не существует"))));
     }
 
-    /*private void removeProduct(Cart cart, DeleteCartDto dto, CartItems cartItems) {
+    private Mono<Void> removeProduct(Cart cart, DeleteCartDto dto, CartItems cartItems) {
         if (cartItems.getCount() <= dto.count()) {
+            // Удаляем элемент из списка корзины и из базы данных
             cart.getOrderedProducts().remove(cartItems);
+            return cartItemRepository.delete(cartItems); // Реактивное удаление
         } else {
+            // Обновляем количество товара и сохраняем изменения в базе данных
             cartItems.setCount(cartItems.getCount() - dto.count());
+            return cartItemRepository.save(cartItems).then(); // Реактивное сохранение
         }
-    }*/
+    }
 
     private void prepareOrder(Cart cart, Product product, CreateCartDto dto) {
         CartItems cartItems = new CartItems();
         cartItems.setCart(cart);
+        cartItems.setCartId(cart.getCartId());
+        cartItems.setProductId(product.getProductId());
         cartItems.setProduct(product);
         cartItems.setCount(dto.count());
         cart.getOrderedProducts().add(cartItems);
@@ -145,10 +164,10 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-    /*private Cart getActualUsrCart(String userIp) {
+    private Mono<Cart> getActualUsrCart(String userIp) {
         return cartRepository.findByUserIpAndStatus(userIp, Status.CREATED)
-                .orElseGet(Cart::new);
-    }*/
+                .switchIfEmpty(Mono.just(new Cart()));
+    }
 
     /*private void processCart(Cart cart) {
         cart.getOrderedProducts().forEach(cartItem -> {

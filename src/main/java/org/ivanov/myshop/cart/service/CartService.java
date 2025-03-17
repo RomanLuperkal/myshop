@@ -6,11 +6,11 @@ import reactor.core.publisher.Mono;
 public interface CartService {
     Mono<CartResponseDto> addToCart(CreateCartDto dto, String userIp);
 
-    //CartResponseDto removeFromCart(DeleteCartDto dto, String userIp);
+    Mono<CartResponseDto> removeFromCart(DeleteCartDto dto, String userIp);
 
-    //ActualCartResponseDto getActualCart(String userIp);
+    Mono<ActualCartResponseDto> getActualCart(String userIp);
 
-    //void deleteProductFromCart(Long productId, String userIp);
+    Mono<Void> deleteProductFromCart(Long productId, String userIp);
 
     //ConfirmCartResponseDto getConfirmCart(Long cartId);
 

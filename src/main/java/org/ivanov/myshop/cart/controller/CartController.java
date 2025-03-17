@@ -3,11 +3,13 @@ package org.ivanov.myshop.cart.controller;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.service.CartService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.result.view.Rendering;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -25,25 +27,27 @@ public class CartController {
         return cartService.addToCart(dto, hostAddress);
     }
 
-    /*@DeleteMapping("/deleteItem")
+    @DeleteMapping("/deleteItem")
     @ResponseBody
-    public ResponseEntity<CartResponseDto> deleteFromCart(@RequestBody DeleteCartDto dto, HttpServletRequest request) {
-        return ResponseEntity.ok(cartService.removeFromCart(dto, request.getRemoteAddr()));
-    }*/
+    public Mono<CartResponseDto> deleteFromCart(@RequestBody DeleteCartDto dto, ServerWebExchange exchange) {
+        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+        return cartService.removeFromCart(dto, hostAddress);
+    }
 
-    /*@GetMapping("/actual")
-    public String getActualCart(HttpServletRequest request, Model model) {
-        ActualCartResponseDto cart = cartService.getActualCart(request.getRemoteAddr());
-        model.addAttribute("cart", cart);
-        return "cart";
-    }*/
+    @GetMapping("/actual")
+    public Mono<Rendering> getActualCart(ServerWebExchange exchange) {
+        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+        Rendering r = Rendering.view("cart").modelAttribute("cart", cartService.getActualCart(hostAddress)).build();
+        return Mono.just(r);
+    }
 
-    /*@DeleteMapping("/deleteProduct/{productId}")
+    @DeleteMapping("/deleteProduct/{productId}")
     @ResponseBody
-    public ResponseEntity<Void> deleteProductFromCart(@PathVariable Long productId, HttpServletRequest request) {
-        cartService.deleteProductFromCart(productId, request.getRemoteAddr());
-        return ResponseEntity.noContent().build();
-    }*/
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteProductFromCart(@PathVariable Long productId, ServerWebExchange exchange) {
+        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+        return cartService.deleteProductFromCart(productId, hostAddress);
+    }
 
     /*@GetMapping("{cartId}")
     public String getConfirmCart(@PathVariable Long cartId, Model model) {
