@@ -143,9 +143,9 @@
         <tr th:each="cart : ${listConfirmCart.confirmCarts}">
             <td>
                 <a th:href="@{/carts/{id}(id=${cart.id})}"
-                   th:text="${#temporals.format(cart.confirmedDate, 'dd.MM.yyyy HH:mm')}"></a>
+                   th:text="${#temporals.format(cart.confirmed_date, 'dd.MM.yyyy HH:mm')}"></a>
             </td>
-            <td th:text="'₽' + ${cart.cartPrice}"></td>
+            <td th:text="'₽' + ${cart.cart_price}"></td>
         </tr>
         </tbody>
     </table>

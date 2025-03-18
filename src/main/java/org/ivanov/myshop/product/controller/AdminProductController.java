@@ -6,7 +6,6 @@ import org.ivanov.myshop.product.dto.ProductCreateDto;
 import org.ivanov.myshop.product.dto.UpdateProductDto;
 import org.ivanov.myshop.product.service.ProductService;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.result.view.Rendering;

@@ -8,20 +8,20 @@ import org.ivanov.myshop.cart_item.model.CartItems;
 import org.ivanov.myshop.product.model.Product;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.ReactiveTransactionManager;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
 public class CustomCartRepositoryImpl implements CustomCartRepository {
     private final R2dbcEntityTemplate entityTemplate;
-    private final ReactiveTransactionManager transactionManager;
     private final String SELECT_CART_BY_USER_IP_AND_STATUS = """
             SELECT c.curt_id,
                    c.user_ip,
@@ -43,6 +43,14 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
               AND c.status = :status
             """;
 
+    private final String SELECT_FULL_CART = """
+            SELECT *
+            FROM cart c
+            JOIN cart_items ci ON ci.curt_id = c.curt_id
+            JOIN product p ON p.product_id = ci.product_id
+            WHERE c.curt_id = :curtId
+            """;
+
     @Override
     public Mono<Cart> findByUserIpAndStatus(String userIp, Status status) {
         return entityTemplate.getDatabaseClient()
@@ -50,27 +58,35 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
                 .bind("userIp", userIp)
                 .bind("status", status.toString())
                 .fetch()
-                .all() // Возвращает Flux<Map<String, Object>>
-                .collectList() // Собираем все строки в список
-                .map(this::mapToCart); // Преобразуем список строк в объект Ca
-        }
+                .all()
+                .collectList()
+                .map(this::mapToCart);
+    }
+
+    @Override
+    public Mono<Cart> getFullCartById(Long curtId) {
+        return entityTemplate.getDatabaseClient()
+                .sql(SELECT_FULL_CART)
+                .bind("curtId", curtId)
+                .fetch()
+                .all()
+                .collectList()
+                .map(this::mapToCart);
+    }
 
     private Cart mapToCart(List<Map<String, Object>> rows) {
         if (rows.isEmpty()) {
-            return null; // Если нет данных, возвращаем null
+            return null;
         }
 
-        // Берем первую строку для маппинга основной корзины
         Map<String, Object> firstRow = rows.get(0);
         Cart cart = mapCart(firstRow);
 
-        // Группируем данные по элементам корзины
         Set<CartItems> cartItems = new HashSet<>();
         for (Map<String, Object> row : rows) {
             CartItems item = mapCartItem(row);
             if (item != null) {
                 item.setCartId(cart.getCartId());
-                // Добавляем связанный продукт
                 Product product = mapProduct(row);
                 if (product != null) {
                     item.setProduct(product);
@@ -80,7 +96,6 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
             }
         }
 
-        // Устанавливаем элементы корзины
         cart.setOrderedProducts(cartItems);
         return cart;
     }
@@ -98,7 +113,7 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
     private CartItems mapCartItem(Map<String, Object> row) {
         Long curtItemId = (Long) row.get("curt_item_id");
         if (curtItemId == null) {
-            return null; // Если нет связанных элементов
+            return null;
         }
         CartItems item = new CartItems();
         item.setCurtItemId(curtItemId);
@@ -109,7 +124,7 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
     private Product mapProduct(Map<String, Object> row) {
         Long productId = (Long) row.get("product_id");
         if (productId == null) {
-            return null; // Если нет связанных продуктов
+            return null;
         }
         Product product = new Product();
         product.setProductId(productId);
@@ -123,4 +138,4 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
         product.setPrice(new BigDecimal(row.get("price").toString()));
         return product;
     }
-    }
+}

@@ -25,7 +25,6 @@ public class Cart {
     @Column("confirmed_date")
     private LocalDateTime confirmedDate;
     private Status status = Status.CREATED;
-    //@OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @Transient
     private Set<CartItems> orderedProducts = new HashSet<>();
 }

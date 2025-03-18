@@ -16,11 +16,13 @@ import org.ivanov.myshop.product.repository.ProductRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -108,28 +110,33 @@ public class CartServiceImpl implements CartService {
         }
 
 
-    /*@Override
-    public ConfirmCartResponseDto getConfirmCart(Long cartId) {
-        Cart cart = cartRepository.getFullCartById(cartId)
-                .orElseThrow(() -> new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины c id="+cartId + " не существует"));
-        return new ConfirmCartResponseDto(cartMapper.mapToPurchasedProductDtoList(cart.getOrderedProducts()));
-    }*/
+    @Override
+    public Mono<ConfirmCartResponseDto> getConfirmCart(Long cartId) {
+        return cartRepository.getFullCartById(cartId)
+                .switchIfEmpty(Mono.error(new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины c id="+cartId + " не существует")))
+                        .flatMap(cart -> Mono.just(new ConfirmCartResponseDto(cartMapper.mapToPurchasedProductDtoList(cart.getOrderedProducts()))));
 
-    /*@Override
+    }
+
+    @Override
     @Transactional
-    public Long confirmCart(String userIp) {
-        Cart cart = getActualUsrCart(userIp);
-        processCart(cart);
-        cart.setConfirmedDate(LocalDateTime.now());
-        cart.setStatus(Status.DONE);
-        return cart.getCartId();
-    }*/
+    public Mono<Long> confirmCart(String userIp) {
+        return getActualUsrCart(userIp)
+                .flatMap(cart -> {
+                    cart.setConfirmedDate(LocalDateTime.now());
+                    cart.setStatus(Status.DONE);
 
-    /*@Override
-    public ListConfirmCartDto getConfirmCartList(String userIp) {
-        List<ConfirmCart> confirmCarts = cartRepository.getConfirmCartsByUserIp(userIp);
-        return cartMapper.mapToConfirmCartDto(confirmCarts);
-    }*/
+                    return processCart(cart)
+                            .then(cartRepository.save(cart))
+                            .thenReturn(cart.getCartId());
+                });
+    }
+
+    @Override
+    public Mono<ListConfirmCartDto> getConfirmCartList(String userIp) {
+        Flux<ConfirmCart> findConfirmCarts = cartRepository.getConfirmCartsByUserIp(userIp);
+        return findConfirmCarts.collectList().flatMap(confirmCarts  -> Mono.just(cartMapper.mapToConfirmCartDto(confirmCarts)));
+    }
 
     private Mono<Product> getProductById(Long productId) {
         return productRepository.findById(productId)
@@ -138,13 +145,11 @@ public class CartServiceImpl implements CartService {
 
     private Mono<Void> removeProduct(Cart cart, DeleteCartDto dto, CartItems cartItems) {
         if (cartItems.getCount() <= dto.count()) {
-            // Удаляем элемент из списка корзины и из базы данных
             cart.getOrderedProducts().remove(cartItems);
-            return cartItemRepository.delete(cartItems); // Реактивное удаление
+            return cartItemRepository.delete(cartItems);
         } else {
-            // Обновляем количество товара и сохраняем изменения в базе данных
             cartItems.setCount(cartItems.getCount() - dto.count());
-            return cartItemRepository.save(cartItems).then(); // Реактивное сохранение
+            return cartItemRepository.save(cartItems).then();
         }
     }
 
@@ -169,7 +174,8 @@ public class CartServiceImpl implements CartService {
                 .switchIfEmpty(Mono.just(new Cart()));
     }
 
-    /*private void processCart(Cart cart) {
+    private Mono<Void> processCart(Cart cart) {
+        Set<Product> soldProducts = new HashSet<>();
         cart.getOrderedProducts().forEach(cartItem -> {
             Long stockCount = cartItem.getProduct().getCount();
             int requestedCount = cartItem.getCount();
@@ -178,8 +184,9 @@ public class CartServiceImpl implements CartService {
                 throw new CartException(HttpStatus.CONFLICT, "Кол-во товара на складе изменилось. Пересоздайте заказ");
             }
 
-            // Обновляем количество товара на складе
             cartItem.getProduct().setCount(stockCount - requestedCount);
+            soldProducts.add(cartItem.getProduct());
         });
-    }*/
+        return productRepository.saveAll(soldProducts).then();
+    }
 }

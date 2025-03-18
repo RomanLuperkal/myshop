@@ -1,45 +1,23 @@
 package org.ivanov.myshop.cart.repository;
 
-import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.model.Cart;
 import org.ivanov.myshop.cart.proection.ConfirmCart;
-//import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
 
 @Repository
 public interface CartRepository extends R2dbcRepository<Cart, Long>, CustomCartRepository {
-    /*@Query("""
-            SELECT c
-            FROM Cart c
-            JOIN FETCH c.orderedProducts ci
-            JOIN FETCH ci.product p
-            WHERE c.userIp = :userIp AND c.status = :status
+    @Query("""
+            SELECT c.curt_id as id, c.confirmed_date, sum(p.price * ci.count) as cart_price
+            FROM cart c
+            JOIN cart_items ci on  c.curt_id = ci.curt_id
+            JOIN product p on p.product_id = ci.product_id
+            WHERE c.user_ip = :userIp
+            AND c.status = 'DONE'
+            group by c.confirmed_date, c.curt_id
             """)
-    Optional<Cart> findByUserIpAndStatus(@Param("userIp") String userIp, @Param("status") Status status);*/
-
-    /*@Query("""
-            SELECT c
-            FROM Cart c
-            JOIN FETCH c.orderedProducts ci
-            JOIN FETCH ci.product p
-            WHERE c.cartId = :curtId
-            """)
-    Optional<Cart> getFullCartById(@Param("curtId") Long curtId);*/
-
-   /* @Query("""
-            SELECT c.cartId as id, c.confirmedDate as  confirmedDate, sum(p.price * ci.count) as cartPrice
-            FROM Cart c
-            JOIN CartItems ci on  c.cartId = ci.cart.cartId
-            JOIN Product p on p.productId = ci.product.productId
-            WHERE c.userIp = :userIp
-            AND c.status = org.ivanov.myshop.cart.enums.Status.DONE
-            group by c.confirmedDate, c.cartId
-            """)
-    List<ConfirmCart> getConfirmCartsByUserIp(@Param("userIp") String userIp);*/
+    Flux<ConfirmCart> getConfirmCartsByUserIp(@Param("userIp") String userIp);
 }

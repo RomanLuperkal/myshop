@@ -37,7 +37,7 @@ public interface CartMapper {
 
     private BigDecimal calcTotalCount(List<ConfirmCart> carts) {
         BigDecimal total = carts.stream()
-                .map(ConfirmCart::getCartPrice)
+                .map(ConfirmCart::cart_price)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return total.setScale(2, RoundingMode.HALF_UP);

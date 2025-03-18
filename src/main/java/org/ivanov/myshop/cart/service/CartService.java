@@ -12,9 +12,9 @@ public interface CartService {
 
     Mono<Void> deleteProductFromCart(Long productId, String userIp);
 
-    //ConfirmCartResponseDto getConfirmCart(Long cartId);
+    Mono<ConfirmCartResponseDto> getConfirmCart(Long cartId);
 
-    //Long confirmCart(String userIp);
+    Mono<Long> confirmCart(String userIp);
 
-    //ListConfirmCartDto getConfirmCartList(String userIp);
+    Mono<ListConfirmCartDto> getConfirmCartList(String userIp);
 }

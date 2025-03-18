@@ -4,8 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.service.CartService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -49,25 +47,26 @@ public class CartController {
         return cartService.deleteProductFromCart(productId, hostAddress);
     }
 
-    /*@GetMapping("{cartId}")
-    public String getConfirmCart(@PathVariable Long cartId, Model model) {
-        ConfirmCartResponseDto confirmCart = cartService.getConfirmCart(cartId);
-        model.addAttribute("confirmCart", confirmCart);
-        return "confirm-cart";
-    }*/
+    @GetMapping("{cartId}")
+    public Mono<Rendering> getConfirmCart(@PathVariable Long cartId, Model model) {
+        Mono<ConfirmCartResponseDto> confirmCart = cartService.getConfirmCart(cartId);
+        Rendering  r = Rendering.view("confirm-cart").modelAttribute("confirmCart", confirmCart).build();
+        return Mono.just(r);
+    }
 
-   /* @PutMapping("/confirm")
+    @PutMapping("/confirm")
     @ResponseBody
-    public ResponseEntity<Long> confirmCart(HttpServletRequest request) {
-        Long curtId = cartService.confirmCart(request.getRemoteAddr());
-        return ResponseEntity.ok(curtId);
-    }*/
+    public Mono<Long> confirmCart(ServerWebExchange exchange) {
+        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+        return cartService.confirmCart(hostAddress);
+    }
 
-    /*@GetMapping("/confirm")
-    public String getConfirmCarts(HttpServletRequest request, Model model) {
-        ListConfirmCartDto listConfirmCartDto = cartService.getConfirmCartList(request.getRemoteAddr());
-        model.addAttribute("listConfirmCart", listConfirmCartDto);
-        return "cart-list";
-    }*/
+    @GetMapping("/confirm")
+    public Mono<Rendering> getConfirmCarts(ServerWebExchange exchange) {
+        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+        Mono<ListConfirmCartDto> listConfirmCartDto = cartService.getConfirmCartList(hostAddress);
+        Rendering r = Rendering.view("cart-list").modelAttribute("listConfirmCart", listConfirmCartDto).build();
+        return Mono.just(r);
+    }
 
 }
