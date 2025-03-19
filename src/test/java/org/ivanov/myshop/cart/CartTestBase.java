@@ -1,6 +1,6 @@
 package org.ivanov.myshop.cart;
 
-/*import org.ivanov.myshop.cart.dto.CreateCartDto;
+import org.ivanov.myshop.cart.dto.CreateCartDto;
 import org.ivanov.myshop.cart.dto.DeleteCartDto;
 import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.model.Cart;
@@ -58,23 +58,8 @@ public abstract class CartTestBase {
 
     protected List<ConfirmCart> getConfirmCarts() {
         List<ConfirmCart> confirmCarts = new ArrayList<>();
-        ConfirmCart confirmCart = new ConfirmCart() {
-            @Override
-            public Long getId() {
-                return 1L;
-            }
-
-            @Override
-            public LocalDateTime getConfirmedDate() {
-                return LocalDateTime.now();
-            }
-
-            @Override
-            public BigDecimal getCartPrice() {
-                return new BigDecimal("1.5");
-            }
-        };
+        ConfirmCart confirmCart = new ConfirmCart(1L, LocalDateTime.now(), new BigDecimal("1.5"));
         confirmCarts.add(confirmCart);
         return confirmCarts;
     }
-}*/
+}
