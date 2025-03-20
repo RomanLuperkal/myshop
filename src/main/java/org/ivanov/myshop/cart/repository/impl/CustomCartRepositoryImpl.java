@@ -129,9 +129,9 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
         Product product = new Product();
         product.setProductId(productId);
         product.setProductName((String) row.get("product_name"));
-        ByteBuffer imageBuffer = (ByteBuffer) row.get("image");
-        byte[] imageBytes = new byte[imageBuffer.remaining()];
-        imageBuffer.get(imageBytes);
+        byte[] imageBytes = (byte[]) row.get("image");
+        //byte[] imageBytes = new byte[imageBuffer.remaining()];
+        //imageBuffer.get(imageBytes);
         product.setImage(imageBytes);
         product.setDescription((String) row.get("description"));
         product.setCount((Long) row.get("product_count"));

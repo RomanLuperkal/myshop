@@ -1,8 +1,8 @@
 spring:
   r2dbc:
     url: r2dbc:h2:mem:///myshop
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD}
+    username: sa
+    password:
     pool:
       enabled: true
       initial-size: 10

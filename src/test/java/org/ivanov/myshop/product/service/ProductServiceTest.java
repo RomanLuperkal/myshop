@@ -3,7 +3,6 @@ package org.ivanov.myshop.product.service;
 import lombok.SneakyThrows;
 import org.ivanov.myshop.product.ProductTestBase;
 import org.ivanov.myshop.product.dto.ListProductDto;
-import org.ivanov.myshop.product.dto.ListShortProductDto;
 import org.ivanov.myshop.product.dto.ProductCreateDto;
 import org.ivanov.myshop.product.dto.UpdateProductDto;
 import org.ivanov.myshop.product.mapper.ProductMapper;
@@ -25,7 +24,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,49 +57,60 @@ public class ProductServiceTest extends ProductTestBase {
         ListProductDto exceptedProductListDto = getListProductDto();
         Product exceptedProduct = getProduct();
         Page<Product> page = new PageImpl<>(List.of(exceptedProduct), pageable, exceptedProductListDto.content().size());
-        //when(productRepository.findAll(any(), eq(pageable))).thenReturn(page);
         when(productRepository.findProducts(null, pageable)).thenReturn(Flux.fromIterable(List.of(exceptedProduct)));
+        when(productRepository.countByProductNameContainingIgnoreCase(null)).thenReturn(Mono.just(10L));
 
-        //ListProductDto actualProducts = productService.getProducts(pageable, null);
+        StepVerifier.create(productService.getProducts(pageable, null))
 
-        assertEquals(actualProducts.content().getFirst().productId(), exceptedProduct.getProductId());
-        verify(productRepository, times(1)).findProducts(any(), eq(pageable));
+                .assertNext(response -> {
+                    assertEquals(response.content().getFirst().productId(), exceptedProduct.getProductId());
+                    verify(productRepository, times(1)).findProducts(any(), eq(pageable));
+                })
+                .verifyComplete();
+
+
     }
 
-    /*@Test
+    @Test
     @SneakyThrows
     void getProductsWhenReturnListShortProductDtoTest() {
         Product exceptedProduct = getProduct();
         List<Product> exceptedProductList = List.of(exceptedProduct);
-        when(productRepository.findAll()).thenReturn(exceptedProductList);
+        when(productRepository.findAll()).thenReturn(Flux.fromIterable(exceptedProductList));
 
-        ListShortProductDto actualProducts = productService.getProducts();
+        StepVerifier.create(productService.getProducts())
 
-        assertEquals(actualProducts.products().getFirst().productId(), exceptedProduct.getProductId());
-        verify(productRepository, times(1)).findAll();
-    }*/
+                .assertNext(response -> {
+                    assertEquals(response.products().getFirst().productId(), exceptedProduct.getProductId());
+                    verify(productRepository, times(1)).findAll();
+                })
+                .verifyComplete();
+    }
 
-    /*@Test
+    @Test
     @SneakyThrows
     void updateProductTest() {
         UpdateProductDto exceptedProductUpdateDto = getUpdateProductDto();
         Product exceptedProduct = getProduct();
-        when(productRepository.findById(exceptedProduct.getProductId())).thenReturn(Optional.of(exceptedProduct));
+        when(productRepository.findById(exceptedProduct.getProductId())).thenReturn(Mono.just(exceptedProduct));
+        when(productRepository.save(any())).thenReturn(Mono.empty());
 
-        productService.updateProduct(exceptedProductUpdateDto);
+        StepVerifier.create(productService.updateProduct(exceptedProductUpdateDto)).verifyComplete();
 
         assertAll(
                 () -> assertEquals(exceptedProduct.getPrice(), exceptedProductUpdateDto.getPrice()),
                 () -> assertEquals(exceptedProduct.getCount(), exceptedProductUpdateDto.getCount()),
                 () -> verify(productRepository, times(1)).findById(exceptedProduct.getProductId())
         );
-    }*/
+    }
 
-    /*@Test
+    @Test
     @SneakyThrows
     void deleteProductTest() {
-        productService.deleteProduct(1L);
+        when(productRepository.deleteById(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(productService.deleteProduct(1L)).verifyComplete();
 
         verify(productRepository, times(1)).deleteById(1L);
-    }*/
+    }
 }
