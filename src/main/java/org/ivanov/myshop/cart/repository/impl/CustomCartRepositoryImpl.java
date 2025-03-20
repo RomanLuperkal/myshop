@@ -60,7 +60,7 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
                 .fetch()
                 .all()
                 .collectList()
-                .map(this::mapToCart);
+                .flatMap(this::mapToCart);
     }
 
     @Override
@@ -71,12 +71,12 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
                 .fetch()
                 .all()
                 .collectList()
-                .map(this::mapToCart);
+                .flatMap(this::mapToCart);
     }
 
-    private Cart mapToCart(List<Map<String, Object>> rows) {
+    private Mono<Cart> mapToCart(List<Map<String, Object>> rows) {
         if (rows.isEmpty()) {
-            return null;
+            return Mono.empty();
         }
 
         Map<String, Object> firstRow = rows.get(0);
@@ -97,7 +97,7 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
         }
 
         cart.setOrderedProducts(cartItems);
-        return cart;
+        return Mono.just(cart);
     }
 
     private Cart mapCart(Map<String, Object> row) {

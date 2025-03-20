@@ -1,6 +1,6 @@
 package org.ivanov.myshop.product.service;
 
-/*import lombok.SneakyThrows;
+import lombok.SneakyThrows;
 import org.ivanov.myshop.product.ProductTestBase;
 import org.ivanov.myshop.product.dto.ListProductDto;
 import org.ivanov.myshop.product.dto.ListShortProductDto;
@@ -20,6 +20,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockReset;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,8 +45,9 @@ public class ProductServiceTest extends ProductTestBase {
     @SneakyThrows
     void createProductTest() {
         ProductCreateDto exceptedProductCreateDto = getProductCreateDto();
+        when(productRepository.save(any())).thenReturn(Mono.empty());
 
-        productService.createProduct(exceptedProductCreateDto);
+        StepVerifier.create( productService.createProduct(exceptedProductCreateDto)).verifyComplete();
 
         verify(productRepository, times(1)).save(any(Product.class));
     }
@@ -55,15 +59,16 @@ public class ProductServiceTest extends ProductTestBase {
         ListProductDto exceptedProductListDto = getListProductDto();
         Product exceptedProduct = getProduct();
         Page<Product> page = new PageImpl<>(List.of(exceptedProduct), pageable, exceptedProductListDto.content().size());
-        when(productRepository.findAll(any(), eq(pageable))).thenReturn(page);
+        //when(productRepository.findAll(any(), eq(pageable))).thenReturn(page);
+        when(productRepository.findProducts(null, pageable)).thenReturn(Flux.fromIterable(List.of(exceptedProduct)));
 
-        ListProductDto actualProducts = productService.getProducts(pageable, null);
+        //ListProductDto actualProducts = productService.getProducts(pageable, null);
 
         assertEquals(actualProducts.content().getFirst().productId(), exceptedProduct.getProductId());
-        verify(productRepository, times(1)).findAll(any(), eq(pageable));
+        verify(productRepository, times(1)).findProducts(any(), eq(pageable));
     }
 
-    @Test
+    /*@Test
     @SneakyThrows
     void getProductsWhenReturnListShortProductDtoTest() {
         Product exceptedProduct = getProduct();
@@ -74,9 +79,9 @@ public class ProductServiceTest extends ProductTestBase {
 
         assertEquals(actualProducts.products().getFirst().productId(), exceptedProduct.getProductId());
         verify(productRepository, times(1)).findAll();
-    }
+    }*/
 
-    @Test
+    /*@Test
     @SneakyThrows
     void updateProductTest() {
         UpdateProductDto exceptedProductUpdateDto = getUpdateProductDto();
@@ -90,13 +95,13 @@ public class ProductServiceTest extends ProductTestBase {
                 () -> assertEquals(exceptedProduct.getCount(), exceptedProductUpdateDto.getCount()),
                 () -> verify(productRepository, times(1)).findById(exceptedProduct.getProductId())
         );
-    }
+    }*/
 
-    @Test
+    /*@Test
     @SneakyThrows
     void deleteProductTest() {
         productService.deleteProduct(1L);
 
         verify(productRepository, times(1)).deleteById(1L);
-    }
-}*/
+    }*/
+}

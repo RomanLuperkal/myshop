@@ -41,9 +41,9 @@ public class CartServiceImpl implements CartService {
             }
             return Mono.just(p);
         });
-        Mono<Cart> actualCart = cartRepository.findByUserIpAndStatus(userIp, Status.CREATED);
+        Mono<Cart> actualCart = getActualUsrCart(userIp);
         return Mono.zip(findProduct, actualCart).flatMap(tuple -> {
-            Cart cart = tuple.getT2();
+             Cart cart = tuple.getT2();
             Product product = tuple.getT1();
             if (cart.getOrderedProducts().isEmpty()) {
                 cart.setUserIp(userIp);
@@ -60,7 +60,15 @@ public class CartServiceImpl implements CartService {
             }
 
             return cartRepository.save(cart)
-                    .thenMany(cartItemRepository.saveAll(cart.getOrderedProducts()))
+                    .thenMany(Flux.fromIterable(cart.getOrderedProducts())
+                            .map(cartItem -> {
+                                cartItem.setCartId(cart.getCartId());
+                                return cartItem;
+                            })
+                            .collectList()
+                            .flatMapMany(cartItemRepository::saveAll
+                            )
+                    )
                     .then(Mono.just(new CartResponseDto("Товар " + product.getProductName() +
                             " в количестве " + dto.count() + " шт. добавлен в корзину")));
         });
@@ -82,7 +90,7 @@ public class CartServiceImpl implements CartService {
                                     .findFirst())
                             .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
                             .flatMap(cartItems ->
-                                    removeProduct(cart, dto, cartItems) // Вызов реактивного метода
+                                    removeProduct(cart, dto, cartItems)
                                             .thenReturn(new CartResponseDto("Товар " + product.getProductName() +
                                                     " в количестве " + dto.count() + " шт. удален из корзины"))
                             );
@@ -104,7 +112,6 @@ public class CartServiceImpl implements CartService {
             Cart cart = tuple.getT2();
             return Mono.justOrEmpty(cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst())
                     .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
-                    .doOnNext(cartItems -> System.out.println(cartItems.getCurtItemId() + ", " + cartItems.getCartId() + ", " + cartItems.getProductId()))
                     .flatMap(cartItemRepository::delete);
         });
         }
