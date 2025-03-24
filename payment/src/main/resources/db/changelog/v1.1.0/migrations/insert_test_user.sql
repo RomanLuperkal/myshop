@@ -1,0 +1,1 @@
+INSERT INTO account(user_ip) values ('0:0:0:0:0:0:0:1');
