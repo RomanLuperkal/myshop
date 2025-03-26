@@ -1,11 +1,12 @@
 version: '3.8'
 services:
-  stats-server:
-    build: ./
+  storefront-server:
+    build: ./storefront
     image: myshop-image
     container_name: myshop
     depends_on:
       - myshop-db
+      - redis
     ports:
       - "8080:8080"
     environment:
@@ -14,6 +15,9 @@ services:
       - POSTGRES_PASSWORD=admin
       - DB_HOST=myshop-db
       - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=mysecretpassword  # Передаём пароль Redis в stats-server
 
   myshop-db:
     image: postgres:15.1-alpine
@@ -26,3 +30,14 @@ services:
       - POSTGRES_DB=myshop
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=admin
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /redis_data
+    environment:
+      - REDIS_PASSWORD=admin
+    command: ["redis-server", "--requirepass", "admin"]
