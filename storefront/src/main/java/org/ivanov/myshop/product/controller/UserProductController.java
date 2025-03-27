@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.result.view.Rendering;
@@ -31,6 +32,13 @@ public class UserProductController {
         Pageable pageable = PageRequest.of(page, size, sortObj);
         Mono<ListProductDto> products = productService.getProducts(pageable, search);
         Rendering r = Rendering.view("product-list").modelAttribute("products", products).build();
+        return Mono.just(r);
+    }
+
+    @GetMapping("{productId}")
+    public Mono<Rendering> getProduct(@PathVariable Long productId) {
+        Rendering r = Rendering.view("product")
+                .modelAttribute("product", productService.getProduct(productId)).build();
         return Mono.just(r);
     }
 

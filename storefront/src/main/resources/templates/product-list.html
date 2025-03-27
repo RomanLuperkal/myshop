@@ -134,7 +134,11 @@
             <div class="card product-card">
                 <img th:src="${product.image}" class="card-img-top" alt="Изображение товара"></img>
                 <div class="card-body">
-                    <h5 class="card-title" th:text="${product.productName}">Название товара</h5>
+                    <!-- Кликабельное название товара -->
+                    <h5 class="card-title">
+                        <a th:href="@{/products/{productId}(productId=${product.productId})}"
+                           th:text="${product.productName}">Название товара</a>
+                    </h5>
                     <p class="card-text">Цена: <strong th:text="${product.price} + ' ₽'">1000 ₽</strong></p>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="btn-group">

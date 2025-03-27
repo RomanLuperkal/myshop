@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+    <title>Карточка товара</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></link>
+    <style>
+        .product-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .product-description {
+            margin-top: 20px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .top-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .top-buttons a {
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .top-buttons a.btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .top-buttons a.btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .top-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-buttons">
+    <a href="/carts/actual" class="btn btn-primary">Перейти в корзину</a>
+    <a href="/products" class="btn btn-success">Продолжить покупки</a>
+</div>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Левая колонка - изображение -->
+        <div class="col-md-6">
+            <img th:src="${product.image}" class="product-image" alt="Изображение товара"></img>
+        </div>
+        <!-- Правая колонка - информация о товаре -->
+        <div class="col-md-6">
+            <h2 th:text="${product.productName}">Название товара</h2>
+            <p class="product-price"><strong th:text="${product.price} + ' ₽'">1000 ₽</strong></p>
+            <p class="product-description" th:text="${product.description}">Описание товара...</p>
+
+            <!-- Кнопки управления корзиной -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" th:onclick="'addToCart(' + ${product.productId} + ')'" title="Добавить в корзину">Добавить в корзину</button>
+                <button class="btn btn-danger" th:onclick="'removeFromCart(' + ${product.productId} + ')'" title="Удалить из корзины">Удалить из корзины</button>
+            </div>
+
+            <!-- Управление количеством -->
+            <div class="quantity-controls">
+                <button class="btn btn-outline-secondary" th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
+                <input type="text" class="form-control text-center" style="width: 60px;" value="1" th:id="'quantity-' + ${product.productId}" readonly="readonly"></input>
+                <button class="btn btn-outline-secondary" th:onclick="'increaseQuantity(' + ${product.productId} + ')'">+</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключение скриптов -->
+<script src="/js/scripts.js"></script>
+</body>
+</html>

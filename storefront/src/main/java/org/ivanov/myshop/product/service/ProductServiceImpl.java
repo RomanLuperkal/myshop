@@ -2,13 +2,11 @@ package org.ivanov.myshop.product.service;
 
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.handler.exception.ProductException;
-import org.ivanov.myshop.product.dto.ListProductDto;
-import org.ivanov.myshop.product.dto.ListShortProductDto;
-import org.ivanov.myshop.product.dto.ProductCreateDto;
-import org.ivanov.myshop.product.dto.UpdateProductDto;
+import org.ivanov.myshop.product.dto.*;
 import org.ivanov.myshop.product.mapper.ProductMapper;
 import org.ivanov.myshop.product.model.Product;
 import org.ivanov.myshop.product.repository.ProductRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -70,4 +68,15 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.deleteById(id);
     }
 
+
+    @Override
+    @Cacheable(
+            value = "product",
+            key = "#productId"
+    )
+    public Mono<ProductResponseDto> getProduct(Long productId) {
+        return productRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ProductException(HttpStatus.NOT_FOUND, "Товара с id=" + productId + " не существует")))
+                .flatMap(existingProduct -> Mono.just(productMapper.productToProductResponseDto(existingProduct)));
+    }
 }
