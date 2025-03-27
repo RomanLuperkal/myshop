@@ -6,7 +6,9 @@ import org.ivanov.myshop.product.dto.*;
 import org.ivanov.myshop.product.mapper.ProductMapper;
 import org.ivanov.myshop.product.model.Product;
 import org.ivanov.myshop.product.repository.ProductRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
 
     @Override
+    @CacheEvict(value = "products", allEntries = true)
     public Mono<Void> createProduct(ProductCreateDto productCreateDto) {
         Product product = productMapper.productCreateDtoToProduct(productCreateDto);
         Mono<byte[]> image = productMapper.getBytesFromPart(productCreateDto.image());
@@ -30,6 +33,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(
+            value = "products",
+            key = "{#search, #pageable.pageNumber, #pageable.pageSize, #pageable.sort}",
+            unless = "#result == null"
+    )
     public Mono<ListProductDto> getProducts(Pageable pageable, String search) {
         Mono<List<Product>> products = productRepository.findProducts(search, pageable).collectList();
         Mono<Long> count = productRepository.countByProductNameContainingIgnoreCase(search);
@@ -50,6 +58,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "product", key = "#updateProductDto.productId"),
+                    @CacheEvict(value = "products", allEntries = true)
+            }
+    )
     public Mono<Void> updateProduct(UpdateProductDto updateProductDto) {
         return productRepository.findById(updateProductDto.getProductId())
                 .switchIfEmpty(Mono.error(new ProductException(HttpStatus.NOT_FOUND, "Товара с id=" + updateProductDto.getProductId() + " не существует")))
@@ -64,6 +78,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "product", key = "#id"),
+                    @CacheEvict(value = "products", allEntries = true)
+            }
+    )
     public Mono<Void> deleteProduct(Long id) {
         return productRepository.deleteById(id);
     }

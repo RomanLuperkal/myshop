@@ -13,6 +13,8 @@ import org.ivanov.myshop.handler.exception.CartException;
 import org.ivanov.myshop.handler.exception.ProductException;
 import org.ivanov.myshop.product.model.Product;
 import org.ivanov.myshop.product.repository.ProductRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "cart", key = "#userIp")
     public Mono<CartResponseDto> addToCart(CreateCartDto dto, String userIp) {
         Mono<Product> findProduct = getProductById(dto.productId()).flatMap(p -> {
             if (p.getCount() < dto.count()) {
@@ -77,6 +80,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "cart", key = "#userIp")
     public Mono<CartResponseDto> removeFromCart(DeleteCartDto dto, String userIp) {
         Mono<Product> productMono = getProductById(dto.productId());
         Mono<Cart> cartMono = getActualUsrCart(userIp);
@@ -98,12 +102,14 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Cacheable(value = "cart", key = "#userIp", unless = "#result == null || #result.cartItems?.isEmpty()")
     public Mono<ActualCartResponseDto> getActualCart(String userIp) {
         Mono<Cart> cart = getActualUsrCart(userIp);
         return cart.map(c -> cartMapper.mapToActualCartResponseDto(c.getOrderedProducts()));
     }
 
     @Override
+    @CacheEvict(value = "cart", key = "#userIp")
     public Mono<Void> deleteProductFromCart(Long productId, String userIp) {
         Mono<Product> productMono = getProductById(productId);
         Mono<Cart> cartMono = getActualUsrCart(userIp);
@@ -127,6 +133,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "cart", key = "#userIp")
     public Mono<Long> confirmCart(String userIp) {
         return getActualUsrCart(userIp)
                 .flatMap(cart -> {
