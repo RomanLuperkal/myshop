@@ -1,18 +1,19 @@
-package org.ivanov.payment.accaunt;
+package org.ivanov.payment.account;
+
 
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/account")
-public class AccountController {
+public class AccountController{
 
     @GetMapping("/balance")
     public void getBalance() {
 
     }
 
-    @PatchMapping("/withdraw")
-    public void withdraw() {}
+    @PatchMapping("/processPayment")
+    public void processPayment() {}
 
     @PatchMapping
     public void setBalance() {}

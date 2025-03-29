@@ -1,0 +1,85 @@
+openapi: 3.0.4
+info:
+  title: Payment Service API
+  description: API сервиса платежей
+  version: 1.0.0
+paths:
+  /account/balance:
+    get:
+      tags:
+        - balance
+      summary: Получить баланс на счете
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponseDto'
+        '500':
+          description: Внутреняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /accaunt/processPayment:
+    post:
+      tags:
+        - balance
+      summary: Оформление заказа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessPaymentDto'
+      responses:
+        '200':
+          description: Платеж успешно проведен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponseDto'
+        '409':
+          description: Состояние счета было изменено. Обновите страницу и попробуйте снова
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Внутреняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+tags:
+  - name: balance
+    description: Взаимодействие с балансом пользователя
+components:
+  schemas:
+    BalanceResponseDto:
+      description: Текущий баланс
+      type: object
+      properties:
+        money:
+          type: number
+          example: 10.5
+    ProcessPaymentDto:
+      type: object
+      required:
+        - orderSum
+      properties:
+        orderSum:
+          type: number
+          example: 10.5
+    ApiError:
+      description: описание ошибки
+      type: object
+      properties:
+        code:
+          type: string
+          example: 404
+        message:
+          type: string
+          example: аккаунт не найден

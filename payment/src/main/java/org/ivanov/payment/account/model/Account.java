@@ -1,4 +1,4 @@
-package org.ivanov.payment.accaunt.model;
+package org.ivanov.payment.account.model;
 
 
 import lombok.Getter;
