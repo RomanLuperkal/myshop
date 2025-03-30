@@ -53,6 +53,29 @@
                             </configOptions>
                         </configuration>
                     </execution>
+
+                    <execution>
+                        <id>generate-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/payment-spec.yml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <output>${project.build.directory}/generated-client</output>
+                            <modelPackage>org.ivanov.payment.client.model</modelPackage>
+                            <apiPackage>org.ivanov.payment.client.api</apiPackage>
+                            <configOptions>
+                                <library>webclient</library>>
+                                <dateLibrary>java8</dateLibrary>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <useJakartaEe>true</useJakartaEe>
+                                <serializableModel>true</serializableModel>
+                                <useRuntimeException>true</useRuntimeException>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                            </configOptions>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

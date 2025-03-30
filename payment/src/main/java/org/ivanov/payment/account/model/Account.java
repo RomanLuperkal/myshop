@@ -15,8 +15,8 @@ public class Account {
     @Id
     @Column("account_id")
     private Long accountId;
-    @Column("user_id")
-    private String userId;
+    @Column("user_ip")
+    private String userIp;
     private BigDecimal balance;
     @Version
     private Long version;

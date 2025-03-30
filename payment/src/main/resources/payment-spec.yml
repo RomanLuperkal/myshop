@@ -9,9 +9,18 @@ paths:
       tags:
         - balance
       summary: Получить баланс на счете
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalanceReqDto'
       responses:
         '200':
           description: Успешный ответ
+          headers:
+              X-ver:
+                $ref: '#/components/headers/X-Ver'
           content:
             application/json:
               schema:
@@ -22,11 +31,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
-  /accaunt/processPayment:
+  /account/processPayment:
     post:
       tags:
         - balance
       summary: Оформление заказа
+      parameters:
+        - name: X-Ver
+          in: header
+          description: версия баланса
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         required: true
         content:
@@ -54,25 +71,44 @@ paths:
                 $ref: '#/components/schemas/ApiError'
 
 tags:
-  - name: balance
-    description: Взаимодействие с балансом пользователя
+  - name: account
+    description: Взаимодействие с аккаунтом пользователя
+
 components:
+  headers:
+    X-Ver:
+      description: версия баланса
+      required: true
+      schema:
+        type: integer
+
   schemas:
     BalanceResponseDto:
       description: Текущий баланс
       type: object
       properties:
-        money:
+        balance:
           type: number
           example: 10.5
+    BalanceReqDto:
+      description: Инф-я о пользователе для получения его текущего баланса
+      type: object
+      properties:
+        userIp:
+          type: string
+          example: 0:0:0:0:0:0:0:1
     ProcessPaymentDto:
       type: object
       required:
         - orderSum
+        - userIp
       properties:
         orderSum:
           type: number
           example: 10.5
+        userIp:
+          type: string
+          example: 0:0:0:0:0:0:0:1
     ApiError:
       description: описание ошибки
       type: object
