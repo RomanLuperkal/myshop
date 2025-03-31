@@ -30,9 +30,9 @@ public interface CartMapper {
         return new ListConfirmCartDto(carts, calcTotalCount(carts));
     }
 
-    default ActualCartResponseDto mapToActualCartResponseDto(Set<CartItems> cartItems) {
+    default ActualCartResponseDto mapToActualCartResponseDto(Set<CartItems> cartItems, BigDecimal balance) {
         CartItemMapper cartItemMapper = Mappers.getMapper(CartItemMapper.class);
-        return cartItemMapper.mapToActualCartResponseDto(cartItems);
+        return cartItemMapper.mapToActualCartResponseDto(cartItems, balance);
     }
 
     private BigDecimal calcTotalCount(List<ConfirmCart> carts) {

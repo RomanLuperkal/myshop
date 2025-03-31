@@ -21,13 +21,22 @@ public interface CartItemMapper {
 
     List<CartItemResponseDto> mapToCartItemResponseDtoList(Set<CartItems> cartItems);
 
-    default ActualCartResponseDto mapToActualCartResponseDto(Set<CartItems> cartItems) {
-        return new ActualCartResponseDto(mapToCartItemResponseDtoList(cartItems), getTotalCount(cartItems));
+    default ActualCartResponseDto mapToActualCartResponseDto(Set<CartItems> cartItems, BigDecimal balance) {
+        if (cartItems.isEmpty()) {
+            return new ActualCartResponseDto(mapToCartItemResponseDtoList(cartItems), getTotalCount(cartItems),
+                    false, "");
+        } else {
+            BigDecimal totalCount = getTotalCount(cartItems);
+            Boolean isOrderButtonEnabled = balance.compareTo(totalCount) >= 0;
+            String message = isOrderButtonEnabled ? "" : "На балансе недостаточно средств";
+            return new ActualCartResponseDto(mapToCartItemResponseDtoList(cartItems), getTotalCount(cartItems),
+                    isOrderButtonEnabled, message);
+        }
     }
 
     default BigDecimal getTotalCount(Set<CartItems> cartItems) {
         BigDecimal total = cartItems.stream()
-                .map(c -> c.getProduct().getPrice())
+                .map(c -> c.getProduct().getPrice().multiply(new BigDecimal(c.getCount())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return total.setScale(2, RoundingMode.HALF_UP);

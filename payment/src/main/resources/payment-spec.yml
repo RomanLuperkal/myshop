@@ -4,17 +4,13 @@ info:
   description: API сервиса платежей
   version: 1.0.0
 paths:
-  /account/balance:
+  /account/balance/{userIp}:
     get:
       tags:
-        - balance
+        - account
       summary: Получить баланс на счете
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BalanceReqDto'
+      parameters:
+        - $ref: '#/components/parameters/UserIp'
       responses:
         '200':
           description: Успешный ответ
@@ -32,9 +28,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiError'
   /account/processPayment:
-    post:
+    patch:
       tags:
-        - balance
+        - account
       summary: Оформление заказа
       parameters:
         - name: X-Ver
@@ -119,3 +115,12 @@ components:
         message:
           type: string
           example: аккаунт не найден
+
+  parameters:
+    UserIp:
+      name: userIp
+      in: path
+      description: IP-адрес пользователя
+      required: true
+      schema:
+        type: string

@@ -1,6 +1,8 @@
 package org.ivanov.myshop.cart.service;
 
 import lombok.RequiredArgsConstructor;
+import org.ivanov.myshop.account.client.AccountServiceClient;
+import org.ivanov.myshop.account.dto.BalanceResponseDto;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.mapper.CartMapper;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
@@ -33,6 +36,7 @@ public class CartServiceImpl implements CartService {
     private final ProductRepository productRepository;
     private final CartMapper cartMapper;
     private final CartItemRepository cartItemRepository;
+    private final AccountServiceClient accountServiceClient;
 
     @Override
     @Transactional
@@ -104,8 +108,13 @@ public class CartServiceImpl implements CartService {
     @Override
     @Cacheable(value = "cart", key = "#userIp", unless = "#result == null || #result.cartItems?.isEmpty()")
     public Mono<ActualCartResponseDto> getActualCart(String userIp) {
+        Mono<BalanceResponseDto> balanceResponseDto = accountServiceClient.getBalance(userIp);
         Mono<Cart> cart = getActualUsrCart(userIp);
-        return cart.map(c -> cartMapper.mapToActualCartResponseDto(c.getOrderedProducts()));
+        return Mono.zip(cart, balanceResponseDto).map(tuple -> {
+            BigDecimal balance = tuple.getT2().getBalance();
+            return cartMapper.mapToActualCartResponseDto(tuple.getT1().getOrderedProducts(), balance);
+        });
+        //return cart.map(c -> cartMapper.mapToActualCartResponseDto(c.getOrderedProducts()));
     }
 
     @Override

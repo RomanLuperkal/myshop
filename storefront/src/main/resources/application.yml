@@ -37,3 +37,10 @@ admin:
   login: ${ADMIN_LOGIN:admin}
   password: ${ADMIN_PASSWORD:1234}
   role: ${USER_ROLE:ADMIN}
+
+rest:
+  account-service:
+    host: http://localhost:8081
+    methods:
+      patch-processOrder: /account/processPayment
+      get-getBalance: /account/balance/{userIp}

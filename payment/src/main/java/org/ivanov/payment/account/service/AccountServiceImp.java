@@ -1,7 +1,6 @@
 package org.ivanov.payment.account.service;
 
 import lombok.RequiredArgsConstructor;
-import org.ivanov.payment.account.dto.BalanceReqDto;
 import org.ivanov.payment.account.dto.BalanceResponseDto;
 import org.ivanov.payment.account.dto.ProcessPaymentDto;
 import org.ivanov.payment.account.handler.AccountException;
@@ -42,9 +41,9 @@ public class AccountServiceImp implements AccountService {
     }
 
     @Override
-    public Mono<ResponseEntity<BalanceResponseDto>> getBalance(BalanceReqDto balanceReqDto) {
-        Mono<Account> account = accountRepository.findAccountByUserIp(balanceReqDto.getUserIp());
-        return account.switchIfEmpty(Mono.error(new AccountException(HttpStatus.NOT_FOUND, "Аккаунт userId=" + balanceReqDto.getUserIp() + " не найден")))
+    public Mono<ResponseEntity<BalanceResponseDto>> getBalance(String userIp) {
+        Mono<Account> account = accountRepository.findAccountByUserIp(userIp);
+        return account.switchIfEmpty(Mono.error(new AccountException(HttpStatus.NOT_FOUND, "Аккаунт userId=" + userIp + " не найден")))
                 .map(acc -> {
                     BalanceResponseDto responseDto = new BalanceResponseDto();
                     responseDto.setBalance(acc.getBalance());
