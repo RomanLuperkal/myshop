@@ -1,6 +1,7 @@
 package org.ivanov.myshop.cart.service;
 
 import lombok.SneakyThrows;
+import org.ivanov.myshop.account.client.AccountServiceClient;
 import org.ivanov.myshop.cart.CartTestBase;
 import org.ivanov.myshop.cart.dto.CreateCartDto;
 import org.ivanov.myshop.cart.dto.DeleteCartDto;
@@ -44,6 +45,9 @@ public class CartServiceTest extends CartTestBase {
 
     @MockitoBean
     private CartRepository cartRepository;
+
+    @MockitoBean
+    private AccountServiceClient accountService;
 
     @MockitoBean
     private ProductRepository productRepository;

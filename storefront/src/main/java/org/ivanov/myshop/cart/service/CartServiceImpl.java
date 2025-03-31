@@ -20,8 +20,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,6 +39,7 @@ public class CartServiceImpl implements CartService {
     private final CartMapper cartMapper;
     private final CartItemRepository cartItemRepository;
     private final AccountServiceClient accountServiceClient;
+    //private final AccountProvider accountProvider;
 
     @Override
     @Transactional
@@ -50,7 +53,7 @@ public class CartServiceImpl implements CartService {
         });
         Mono<Cart> actualCart = getActualUsrCart(userIp);
         return Mono.zip(findProduct, actualCart).flatMap(tuple -> {
-             Cart cart = tuple.getT2();
+            Cart cart = tuple.getT2();
             Product product = tuple.getT1();
             if (cart.getOrderedProducts().isEmpty()) {
                 cart.setUserIp(userIp);
@@ -110,11 +113,8 @@ public class CartServiceImpl implements CartService {
     public Mono<ActualCartResponseDto> getActualCart(String userIp) {
         Mono<BalanceResponseDto> balanceResponseDto = accountServiceClient.getBalance(userIp);
         Mono<Cart> cart = getActualUsrCart(userIp);
-        return Mono.zip(cart, balanceResponseDto).map(tuple -> {
-            BigDecimal balance = tuple.getT2().getBalance();
-            return cartMapper.mapToActualCartResponseDto(tuple.getT1().getOrderedProducts(), balance);
-        });
-        //return cart.map(c -> cartMapper.mapToActualCartResponseDto(c.getOrderedProducts()));
+        return Mono.zip(cart, balanceResponseDto)
+                .flatMap(this::prepeareActualCart);
     }
 
     @Override
@@ -129,14 +129,14 @@ public class CartServiceImpl implements CartService {
                     .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
                     .flatMap(cartItemRepository::delete);
         });
-        }
+    }
 
 
     @Override
     public Mono<ConfirmCartResponseDto> getConfirmCart(Long cartId) {
         return cartRepository.getFullCartById(cartId)
-                .switchIfEmpty(Mono.error(new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины c id="+cartId + " не существует")))
-                        .flatMap(cart -> Mono.just(new ConfirmCartResponseDto(cartMapper.mapToPurchasedProductDtoList(cart.getOrderedProducts()))));
+                .switchIfEmpty(Mono.error(new CartException(HttpStatus.INTERNAL_SERVER_ERROR, "Корзины c id=" + cartId + " не существует")))
+                .flatMap(cart -> Mono.just(new ConfirmCartResponseDto(cartMapper.mapToPurchasedProductDtoList(cart.getOrderedProducts()))));
 
     }
 
@@ -158,7 +158,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public Mono<ListConfirmCartDto> getConfirmCartList(String userIp) {
         Flux<ConfirmCart> findConfirmCarts = cartRepository.getConfirmCartsByUserIp(userIp);
-        return findConfirmCarts.collectList().flatMap(confirmCarts  -> Mono.just(cartMapper.mapToConfirmCartDto(confirmCarts)));
+        return findConfirmCarts.collectList().flatMap(confirmCarts -> Mono.just(cartMapper.mapToConfirmCartDto(confirmCarts)));
     }
 
     private Mono<Product> getProductById(Long productId) {
@@ -211,5 +211,22 @@ public class CartServiceImpl implements CartService {
             soldProducts.add(cartItem.getProduct());
         });
         return productRepository.saveAll(soldProducts).then();
+    }
+
+    private Mono<ActualCartResponseDto> prepeareActualCart(Tuple2<Cart, BalanceResponseDto> tuple) {
+        return Mono.deferContextual(context -> {
+            BigDecimal balance = tuple.getT2().getBalance();
+            if (balance == null) {
+                return Mono.just(cartMapper.mapToActualCartResponseDto(
+                        tuple.getT1().getOrderedProducts(), null
+                ));
+            }
+            WebSession session = context.get("webSession");
+            session.getAttributes().put("balance", balance);
+
+            return Mono.just(cartMapper.mapToActualCartResponseDto(
+                    tuple.getT1().getOrderedProducts(), balance
+            ));
+        });
     }
 }

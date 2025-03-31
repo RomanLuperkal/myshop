@@ -24,18 +24,4 @@ public class AccountController implements AccountApi {
     public Mono<ResponseEntity<BalanceResponseDto>> accountProcessPaymentPatch(Long xVer, Mono<ProcessPaymentDto> processPaymentDto, ServerWebExchange exchange) {
         return null;
     }
-
-
-
-   /* @Override
-    public Mono<ResponseEntity<BalanceResponseDto>> accountProcessPaymentPatch(Long xVer, Mono<ProcessPaymentDto> processPaymentDto, ServerWebExchange exchange) {
-        return processPaymentDto.flatMap(dto ->
-                accountService.processOrder(xVer, dto)
-                        .map(balanceResponseDto -> ResponseEntity.ok().body(balanceResponseDto)));
-    }
-
-    @Override
-    public Mono<ResponseEntity<BalanceResponseDto>> accountBalanceGet(Mono<BalanceReqDto> balanceReqDto, ServerWebExchange exchange) {
-        return balanceReqDto.flatMap(accountService::getBalance);
-    }*/
 }

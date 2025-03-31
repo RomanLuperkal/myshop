@@ -21,6 +21,9 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 0
+  session:
+    #store-type: redis
+    timeout: 1800s
 
   cache:
     type: redis

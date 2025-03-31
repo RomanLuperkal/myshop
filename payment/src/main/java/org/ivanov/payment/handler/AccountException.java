@@ -1,4 +1,4 @@
-package org.ivanov.payment.account.handler;
+package org.ivanov.payment.handler;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -22,6 +22,10 @@ public interface CartItemMapper {
     List<CartItemResponseDto> mapToCartItemResponseDtoList(Set<CartItems> cartItems);
 
     default ActualCartResponseDto mapToActualCartResponseDto(Set<CartItems> cartItems, BigDecimal balance) {
+        if (balance == null) {
+            return new ActualCartResponseDto(mapToCartItemResponseDtoList(cartItems), getTotalCount(cartItems),
+                    false, "Сервис оплаты временно недоступен");
+        }
         if (cartItems.isEmpty()) {
             return new ActualCartResponseDto(mapToCartItemResponseDtoList(cartItems), getTotalCount(cartItems),
                     false, "");

@@ -3,7 +3,7 @@ package org.ivanov.payment.account.service;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.payment.account.dto.BalanceResponseDto;
 import org.ivanov.payment.account.dto.ProcessPaymentDto;
-import org.ivanov.payment.account.handler.AccountException;
+import org.ivanov.payment.handler.AccountException;
 import org.ivanov.payment.account.model.Account;
 import org.ivanov.payment.account.repository.AccountRepository;
 import org.springframework.http.HttpStatus;
