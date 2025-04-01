@@ -10,7 +10,7 @@ public interface CartService {
 
     Mono<ActualCartResponseDto> getActualCart(String userIp);
 
-    Mono<Void> deleteProductFromCart(Long productId, String userIp);
+    Mono<CartResponseDto> deleteProductFromCart(Long productId, String userIp);
 
     Mono<ConfirmCartResponseDto> getConfirmCart(Long cartId);
 

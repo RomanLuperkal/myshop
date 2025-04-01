@@ -23,9 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.ContextView;
 import reactor.util.function.Tuple2;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
@@ -39,7 +41,6 @@ public class CartServiceImpl implements CartService {
     private final CartMapper cartMapper;
     private final CartItemRepository cartItemRepository;
     private final AccountServiceClient accountServiceClient;
-    //private final AccountProvider accountProvider;
 
     @Override
     @Transactional
@@ -52,36 +53,7 @@ public class CartServiceImpl implements CartService {
             return Mono.just(p);
         });
         Mono<Cart> actualCart = getActualUsrCart(userIp);
-        return Mono.zip(findProduct, actualCart).flatMap(tuple -> {
-            Cart cart = tuple.getT2();
-            Product product = tuple.getT1();
-            if (cart.getOrderedProducts().isEmpty()) {
-                cart.setUserIp(userIp);
-                prepareOrder(cart, product, dto);
-            } else {
-                Optional<CartItems> curtItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst();
-                curtItems.ifPresentOrElse(
-                        existingItem -> {
-                            checkTotalCount(product, dto, existingItem);
-                            existingItem.setCount(existingItem.getCount() + dto.count());
-                        },
-                        () -> prepareOrder(cart, product, dto)
-                );
-            }
-
-            return cartRepository.save(cart)
-                    .thenMany(Flux.fromIterable(cart.getOrderedProducts())
-                            .map(cartItem -> {
-                                cartItem.setCartId(cart.getCartId());
-                                return cartItem;
-                            })
-                            .collectList()
-                            .flatMapMany(cartItemRepository::saveAll
-                            )
-                    )
-                    .then(Mono.just(new CartResponseDto("Товар " + product.getProductName() +
-                            " в количестве " + dto.count() + " шт. добавлен в корзину")));
-        });
+        return Mono.zip(findProduct, actualCart).flatMap(tuple -> prepareAddCart(tuple, dto, userIp));
     }
 
 
@@ -92,43 +64,25 @@ public class CartServiceImpl implements CartService {
         Mono<Product> productMono = getProductById(dto.productId());
         Mono<Cart> cartMono = getActualUsrCart(userIp);
         return Mono.zip(productMono, cartMono)
-                .flatMap(tuple -> {
-                    Product product = tuple.getT1();
-                    Cart cart = tuple.getT2();
+                .flatMap(tuple -> prepareRemoveCart(tuple, dto));
 
-                    return Mono.justOrEmpty(cart.getOrderedProducts().stream()
-                                    .filter(c -> c.getProduct().equals(product))
-                                    .findFirst())
-                            .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
-                            .flatMap(cartItems ->
-                                    removeProduct(cart, dto, cartItems)
-                                            .thenReturn(new CartResponseDto("Товар " + product.getProductName() +
-                                                    " в количестве " + dto.count() + " шт. удален из корзины"))
-                            );
-                });
     }
 
     @Override
-    @Cacheable(value = "cart", key = "#userIp", unless = "#result == null || #result.cartItems?.isEmpty()")
+    @Cacheable(value = "cart", key = "#userIp", unless = "#result == null || #result.cartItems?.isEmpty() || #result.isOrderButtonEnabled == false")
     public Mono<ActualCartResponseDto> getActualCart(String userIp) {
         Mono<BalanceResponseDto> balanceResponseDto = accountServiceClient.getBalance(userIp);
         Mono<Cart> cart = getActualUsrCart(userIp);
         return Mono.zip(cart, balanceResponseDto)
-                .flatMap(this::prepeareActualCart);
+                .flatMap(this::prepareActualCart);
     }
 
     @Override
     @CacheEvict(value = "cart", key = "#userIp")
-    public Mono<Void> deleteProductFromCart(Long productId, String userIp) {
+    public Mono<CartResponseDto> deleteProductFromCart(Long productId, String userIp) {
         Mono<Product> productMono = getProductById(productId);
         Mono<Cart> cartMono = getActualUsrCart(userIp);
-        return Mono.zip(productMono, cartMono).flatMap(tuple -> {
-            Product product = tuple.getT1();
-            Cart cart = tuple.getT2();
-            return Mono.justOrEmpty(cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst())
-                    .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
-                    .flatMap(cartItemRepository::delete);
-        });
+        return Mono.zip(productMono, cartMono).flatMap(this::prepareDeleteProductFromCart);
     }
 
 
@@ -213,7 +167,7 @@ public class CartServiceImpl implements CartService {
         return productRepository.saveAll(soldProducts).then();
     }
 
-    private Mono<ActualCartResponseDto> prepeareActualCart(Tuple2<Cart, BalanceResponseDto> tuple) {
+    private Mono<ActualCartResponseDto> prepareActualCart(Tuple2<Cart, BalanceResponseDto> tuple) {
         return Mono.deferContextual(context -> {
             BigDecimal balance = tuple.getT2().getBalance();
             if (balance == null) {
@@ -228,5 +182,88 @@ public class CartServiceImpl implements CartService {
                     tuple.getT1().getOrderedProducts(), balance
             ));
         });
+    }
+
+    private Mono<CartResponseDto> prepareAddCart(Tuple2<Product, Cart> tuple, CreateCartDto dto, String userIp) {
+        return Mono.deferContextual(context -> {
+            Cart cart = tuple.getT2();
+            Product product = tuple.getT1();
+            if (cart.getOrderedProducts().isEmpty()) {
+                cart.setUserIp(userIp);
+                prepareOrder(cart, product, dto);
+            } else {
+                Optional<CartItems> curtItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst();
+                curtItems.ifPresentOrElse(
+                        existingItem -> {
+                            checkTotalCount(product, dto, existingItem);
+                            existingItem.setCount(existingItem.getCount() + dto.count());
+                        },
+                        () -> prepareOrder(cart, product, dto)
+                );
+            }
+
+            Boolean isOrderButtonEnabled = isOrderButtonEnabled(context, cart);
+            return cartRepository.save(cart)
+                    .thenMany(Flux.fromIterable(cart.getOrderedProducts())
+                            .map(cartItem -> {
+                                cartItem.setCartId(cart.getCartId());
+                                return cartItem;
+                            })
+                            .collectList()
+                            .flatMapMany(cartItemRepository::saveAll
+                            )
+                    )
+                    .then(Mono.just(new CartResponseDto("Товар " + product.getProductName() +
+                            " в количестве " + dto.count() + " шт. добавлен в корзину", isOrderButtonEnabled)));
+        });
+    }
+
+    private Mono<CartResponseDto> prepareRemoveCart(Tuple2<Product, Cart> tuple, DeleteCartDto dto) {
+        return Mono.deferContextual(context -> {
+            Product product = tuple.getT1();
+            Cart cart = tuple.getT2();
+
+
+            return Mono.justOrEmpty(cart.getOrderedProducts().stream()
+                            .filter(c -> c.getProduct().equals(product))
+                            .findFirst())
+                    .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
+                    .flatMap(cartItems ->
+                            removeProduct(cart, dto, cartItems)
+                                    .then(Mono.fromCallable(() -> isOrderButtonEnabled(context, cart)))
+                                    .map(isOrderButtonEnabled ->
+                                            new CartResponseDto(
+                                                    "Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. удален из корзины",
+                                                    isOrderButtonEnabled
+                                            )
+                                    ));
+        });
+    }
+
+    private Mono<CartResponseDto> prepareDeleteProductFromCart(Tuple2<Product, Cart> tuple) {
+        return Mono.deferContextual(context -> {
+            Product product = tuple.getT1();
+            Cart cart = tuple.getT2();
+
+            return Mono.justOrEmpty(cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst())
+                    .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
+                    .doOnNext(cartItem -> cart.getOrderedProducts().remove(cartItem))
+                    .flatMap(cartItemRepository::delete)
+                    .then(Mono.fromCallable(() -> isOrderButtonEnabled(context, cart)))
+                    .map(isOrderButtonEnabled -> new CartResponseDto("", isOrderButtonEnabled));
+        });
+    }
+
+    private BigDecimal calcTotalCount(Cart cart) {
+        return cart.getOrderedProducts().stream()
+                .map(cartItems -> cartItems.getProduct().getPrice().multiply(new BigDecimal(cartItems.getCount())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private Boolean isOrderButtonEnabled(ContextView context, Cart cart) {
+        WebSession session = context.get("webSession");
+        BigDecimal balance = (BigDecimal) session.getAttributes().get("balance");
+        BigDecimal totalCount = calcTotalCount(cart);
+        return balance.compareTo(totalCount) >= 0;
     }
 }

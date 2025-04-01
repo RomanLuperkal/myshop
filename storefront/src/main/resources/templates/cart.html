@@ -197,6 +197,16 @@
                         alert(body.message || 'Ошибка при добавлении товара');
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     }
+                    const isOrderButtonEnabled = body.isOrderButtonEnabled; // Получаем значение isOrderButtonEnabled
+                    const confirmOrderButton = document.getElementById('confirm-order'); // Находим кнопку
+
+                    // Обновляем состояние кнопки
+                    confirmOrderButton.disabled = !isOrderButtonEnabled;
+
+                    // Выводим алерт с сообщением
+                    if (!body.isOrderButtonEnabled) {
+                        alert("На балансе недостаточно средств");
+                    }
                     console.log(body.message);
                     return true;
                 });
@@ -227,6 +237,17 @@
                         alert(body.message || 'Ошибка при удалении товара');
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     }
+
+                    const isOrderButtonEnabled = body.isOrderButtonEnabled; // Получаем значение isOrderButtonEnabled
+                    const confirmOrderButton = document.getElementById('confirm-order'); // Находим кнопку
+
+                    // Обновляем состояние кнопки
+                    confirmOrderButton.disabled = !isOrderButtonEnabled;
+
+                    // Выводим алерт с сообщением
+                    if (!body.isOrderButtonEnabled) {
+                        alert("На балансе недостаточно средств");
+                    }
                     console.log(body.message);
                     return true;
                 });
@@ -249,9 +270,27 @@
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     });
                 }
-                if (response.status === 204) {
+                if (response.ok) {
                     console.log('Товар успешно удален');
-                    return true;
+                    return response.json().then(body => {
+                        console.log('Товар успешно удален');
+
+                        // Получаем значение isOrderButtonEnabled из тела ответа
+                        const isOrderButtonEnabled = body.isOrderButtonEnabled;
+
+                        // Находим кнопку "Оформить заказ"
+                        const confirmOrderButton = document.getElementById('confirm-order');
+
+                        // Обновляем состояние кнопки
+                        confirmOrderButton.disabled = !isOrderButtonEnabled;
+
+                        // Выводим сообщение из ответа (если есть)
+                        if (body.message) {
+                            alert(body.message);
+                        }
+
+                        return true;
+                    });
                 }
             })
             .catch(error => {

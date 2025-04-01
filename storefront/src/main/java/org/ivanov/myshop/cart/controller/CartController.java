@@ -3,7 +3,6 @@ package org.ivanov.myshop.cart.controller;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.service.CartService;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -41,8 +40,8 @@ public class CartController {
 
     @DeleteMapping("/deleteProduct/{productId}")
     @ResponseBody
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> deleteProductFromCart(@PathVariable Long productId, ServerWebExchange exchange) {
+            //@ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<CartResponseDto> deleteProductFromCart(@PathVariable Long productId, ServerWebExchange exchange) {
         String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
         return cartService.deleteProductFromCart(productId, hostAddress);
     }
