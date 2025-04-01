@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
 public interface AccountService {
-    Mono<BalanceResponseDto> processOrder(Long xVer, ProcessPaymentDto processPaymentDto);
+    Mono<ResponseEntity<BalanceResponseDto>> processOrder(Long xVer, ProcessPaymentDto processPaymentDto);
 
     Mono<ResponseEntity<BalanceResponseDto>> getBalance(String userIp);
 }

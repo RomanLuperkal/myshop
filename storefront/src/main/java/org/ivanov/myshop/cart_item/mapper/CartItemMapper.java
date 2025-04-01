@@ -24,17 +24,17 @@ public interface CartItemMapper {
     default ActualCartResponseDto mapToActualCartResponseDto(Set<CartItems> cartItems, BigDecimal balance) {
         if (balance == null) {
             return new ActualCartResponseDto(mapToCartItemResponseDtoList(cartItems), getTotalCount(cartItems),
-                    false, "Сервис оплаты временно недоступен");
+                    false, false, "Сервис оплаты временно недоступен");
         }
         if (cartItems.isEmpty()) {
             return new ActualCartResponseDto(mapToCartItemResponseDtoList(cartItems), getTotalCount(cartItems),
-                    false, "");
+                    false, true, "");
         } else {
             BigDecimal totalCount = getTotalCount(cartItems);
             Boolean isOrderButtonEnabled = balance.compareTo(totalCount) >= 0;
             String message = isOrderButtonEnabled ? "" : "На балансе недостаточно средств";
             return new ActualCartResponseDto(mapToCartItemResponseDtoList(cartItems), getTotalCount(cartItems),
-                    isOrderButtonEnabled, message);
+                    isOrderButtonEnabled, true,  message);
         }
     }
 

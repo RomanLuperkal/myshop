@@ -69,7 +69,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @Cacheable(value = "cart", key = "#userIp", unless = "#result == null || #result.cartItems?.isEmpty() || #result.isOrderButtonEnabled == false")
+    @Cacheable(value = "cart", key = "#userIp", unless = "#result == null || #result.cartItems?.isEmpty() || #result.isBalancePositive == false || #result.isPaymentServiceAvailable == false")
     public Mono<ActualCartResponseDto> getActualCart(String userIp) {
         Mono<BalanceResponseDto> balanceResponseDto = accountServiceClient.getBalance(userIp);
         Mono<Cart> cart = getActualUsrCart(userIp);
@@ -98,15 +98,20 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @CacheEvict(value = "cart", key = "#userIp")
     public Mono<Long> confirmCart(String userIp) {
-        return getActualUsrCart(userIp)
-                .flatMap(cart -> {
-                    cart.setConfirmedDate(LocalDateTime.now());
-                    cart.setStatus(Status.DONE);
+        return Mono.deferContextual(context -> {
+            WebSession webSession = context.get("webSession");
+            Long xVer = webSession.getAttribute("xVer");
+            //accountServiceClient.processOrder()
+            return getActualUsrCart(userIp)
+                    .flatMap(cart -> {
+                        cart.setConfirmedDate(LocalDateTime.now());
+                        cart.setStatus(Status.DONE);
 
-                    return processCart(cart)
-                            .then(cartRepository.save(cart))
-                            .thenReturn(cart.getCartId());
-                });
+                        return processCart(cart)
+                                .then(cartRepository.save(cart))
+                                .thenReturn(cart.getCartId());
+                    });
+        });
     }
 
     @Override
@@ -170,13 +175,17 @@ public class CartServiceImpl implements CartService {
     private Mono<ActualCartResponseDto> prepareActualCart(Tuple2<Cart, BalanceResponseDto> tuple) {
         return Mono.deferContextual(context -> {
             BigDecimal balance = tuple.getT2().getBalance();
+            WebSession session = context.get("webSession");
             if (balance == null) {
+                session.getAttributes().remove("balance");
+                session.getAttributes().put("payment", "false");
                 return Mono.just(cartMapper.mapToActualCartResponseDto(
                         tuple.getT1().getOrderedProducts(), null
                 ));
             }
-            WebSession session = context.get("webSession");
+
             session.getAttributes().put("balance", balance);
+            session.getAttributes().put("payment", "true");
 
             return Mono.just(cartMapper.mapToActualCartResponseDto(
                     tuple.getT1().getOrderedProducts(), balance
@@ -202,7 +211,8 @@ public class CartServiceImpl implements CartService {
                 );
             }
 
-            Boolean isOrderButtonEnabled = isOrderButtonEnabled(context, cart);
+            Boolean isOrderButtonEnabled = isBalancePositive(context, cart);
+            Boolean isPaymentServiceAvailable = isPaymentServiceAvailable(context);
             return cartRepository.save(cart)
                     .thenMany(Flux.fromIterable(cart.getOrderedProducts())
                             .map(cartItem -> {
@@ -214,7 +224,7 @@ public class CartServiceImpl implements CartService {
                             )
                     )
                     .then(Mono.just(new CartResponseDto("Товар " + product.getProductName() +
-                            " в количестве " + dto.count() + " шт. добавлен в корзину", isOrderButtonEnabled)));
+                            " в количестве " + dto.count() + " шт. добавлен в корзину", isOrderButtonEnabled, isPaymentServiceAvailable)));
         });
     }
 
@@ -224,19 +234,21 @@ public class CartServiceImpl implements CartService {
             Cart cart = tuple.getT2();
 
 
+            Boolean isPaymentServiceAvailable = isPaymentServiceAvailable(context);
             return Mono.justOrEmpty(cart.getOrderedProducts().stream()
                             .filter(c -> c.getProduct().equals(product))
                             .findFirst())
                     .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
                     .flatMap(cartItems ->
                             removeProduct(cart, dto, cartItems)
-                                    .then(Mono.fromCallable(() -> isOrderButtonEnabled(context, cart)))
-                                    .map(isOrderButtonEnabled ->
+                                    .then(Mono.fromCallable(() -> isBalancePositive(context, cart)))
+                                    .map(isBalancePositive ->
                                             new CartResponseDto(
                                                     "Товар " + product.getProductName() + " в количестве " + dto.count() + " шт. удален из корзины",
-                                                    isOrderButtonEnabled
+                                                    isBalancePositive, isPaymentServiceAvailable
                                             )
                                     ));
+
         });
     }
 
@@ -245,12 +257,13 @@ public class CartServiceImpl implements CartService {
             Product product = tuple.getT1();
             Cart cart = tuple.getT2();
 
+            Boolean isPaymentServiceAvailable = isPaymentServiceAvailable(context);
             return Mono.justOrEmpty(cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst())
                     .switchIfEmpty(Mono.error(new CartException(HttpStatus.CONFLICT, "Товара " + product.getProductName() + " в корзине нет")))
                     .doOnNext(cartItem -> cart.getOrderedProducts().remove(cartItem))
                     .flatMap(cartItemRepository::delete)
-                    .then(Mono.fromCallable(() -> isOrderButtonEnabled(context, cart)))
-                    .map(isOrderButtonEnabled -> new CartResponseDto("", isOrderButtonEnabled));
+                    .then(Mono.fromCallable(() -> isBalancePositive(context, cart)))
+                    .map(isBalancePositive -> new CartResponseDto("", isBalancePositive, isPaymentServiceAvailable));
         });
     }
 
@@ -260,10 +273,19 @@ public class CartServiceImpl implements CartService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
     }
 
-    private Boolean isOrderButtonEnabled(ContextView context, Cart cart) {
+    private Boolean isBalancePositive(ContextView context, Cart cart) {
         WebSession session = context.get("webSession");
-        BigDecimal balance = (BigDecimal) session.getAttributes().get("balance");
-        BigDecimal totalCount = calcTotalCount(cart);
-        return balance.compareTo(totalCount) >= 0;
+        if  (session.getAttributes().containsKey("balance")) {
+            BigDecimal balance = (BigDecimal) session.getAttributes().get("balance");
+            BigDecimal totalCount = calcTotalCount(cart);
+            return balance.compareTo(totalCount) >= 0;
+        }
+        return false;
+    }
+
+    private Boolean isPaymentServiceAvailable(ContextView context) {
+        WebSession session = context.get("webSession");
+        Boolean isPaymentServiceAvailable = Boolean.parseBoolean((String) session.getAttributes().get("payment"));
+        return isPaymentServiceAvailable;
     }
 }

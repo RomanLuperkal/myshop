@@ -70,7 +70,7 @@
         <button
                 class="btn btn-success"
                 id="confirm-order"
-                th:disabled="${!cart.isOrderButtonEnabled}">
+                th:disabled="${!cart.isBalancePositive and !cart.isPaymentServiceAvailable}">
             Оформить заказ
         </button>
     </div>
@@ -197,15 +197,21 @@
                         alert(body.message || 'Ошибка при добавлении товара');
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     }
-                    const isOrderButtonEnabled = body.isOrderButtonEnabled; // Получаем значение isOrderButtonEnabled
+                    const isBalancePositive = body.isBalancePositive;
+                    const isPaymentServiceAvailable = body.isPaymentServiceAvailable;
                     const confirmOrderButton = document.getElementById('confirm-order'); // Находим кнопку
 
                     // Обновляем состояние кнопки
-                    confirmOrderButton.disabled = !isOrderButtonEnabled;
+                    confirmOrderButton.disabled = !isBalancePositive || !isPaymentServiceAvailable;
 
-                    // Выводим алерт с сообщением
-                    if (!body.isOrderButtonEnabled) {
+                    if (!isPaymentServiceAvailable) {
+                        alert("Сервис оплаты временно недоступен. Обновите страницу и попробуйте позже");
+                        return true;
+                    }
+
+                    if (!isBalancePositive) {
                         alert("На балансе недостаточно средств");
+                        return true;
                     }
                     console.log(body.message);
                     return true;
@@ -238,15 +244,21 @@
                         throw new Error(`Error: ${response.status} - ${body.message || 'Unknown error'}`);
                     }
 
-                    const isOrderButtonEnabled = body.isOrderButtonEnabled; // Получаем значение isOrderButtonEnabled
+                    const isBalancePositive = body.isBalancePositive;
+                    const isPaymentServiceAvailable = body.isPaymentServiceAvailable;
                     const confirmOrderButton = document.getElementById('confirm-order'); // Находим кнопку
 
                     // Обновляем состояние кнопки
-                    confirmOrderButton.disabled = !isOrderButtonEnabled;
+                    confirmOrderButton.disabled = !isBalancePositive || !isPaymentServiceAvailable;
 
-                    // Выводим алерт с сообщением
-                    if (!body.isOrderButtonEnabled) {
+                    if (!isPaymentServiceAvailable) {
+                        alert("Сервис оплаты временно недоступен. Обновите страницу и попробуйте позже");
+                        return true;
+                    }
+
+                    if (!isBalancePositive) {
                         alert("На балансе недостаточно средств");
+                        return true;
                     }
                     console.log(body.message);
                     return true;
@@ -275,15 +287,19 @@
                     return response.json().then(body => {
                         console.log('Товар успешно удален');
 
-                        // Получаем значение isOrderButtonEnabled из тела ответа
-                        const isOrderButtonEnabled = body.isOrderButtonEnabled;
+                        // Получаем значение isBalancePositive из тела ответа
+                        const isBalancePositive = body.isBalancePositive;
+                        const isPaymentServiceAvailable = body.isPaymentServiceAvailable;
 
                         // Находим кнопку "Оформить заказ"
                         const confirmOrderButton = document.getElementById('confirm-order');
 
                         // Обновляем состояние кнопки
-                        confirmOrderButton.disabled = !isOrderButtonEnabled;
+                        confirmOrderButton.disabled = !isBalancePositive || !isPaymentServiceAvailable;
 
+                        if (!isBalancePositive && !isPaymentServiceAvailable) {
+                            checkCartItems();
+                        }
                         // Выводим сообщение из ответа (если есть)
                         if (body.message) {
                             alert(body.message);

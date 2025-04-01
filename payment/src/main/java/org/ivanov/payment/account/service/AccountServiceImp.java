@@ -20,7 +20,7 @@ public class AccountServiceImp implements AccountService {
 
 
     @Override
-    public Mono<BalanceResponseDto> processOrder(Long xVer, ProcessPaymentDto processPaymentDto) {
+    public Mono<ResponseEntity<BalanceResponseDto>> processOrder(Long xVer, ProcessPaymentDto processPaymentDto) {
         return accountRepository.findAccountByUserIp(processPaymentDto.getUserIp())
                 .switchIfEmpty(Mono.error(new AccountException(HttpStatus.NOT_FOUND, "Аккаунт userId=" + processPaymentDto.getUserIp() + " не найден")))
                 .flatMap(acc -> {
@@ -31,12 +31,11 @@ public class AccountServiceImp implements AccountService {
                     BigDecimal newBalance = acc.getBalance().subtract(processPaymentDto.getOrderSum());
                     acc.setBalance(newBalance);
 
-                    return accountRepository.save(acc)
-                            .map(savedAcc -> {
-                                BalanceResponseDto responseDto = new BalanceResponseDto();
-                                responseDto.setBalance(savedAcc.getBalance());
-                                return responseDto;
-                            });
+                    return accountRepository.save(acc).map(savedAcc -> {
+                        BalanceResponseDto dto = new BalanceResponseDto();
+                        dto.setBalance(savedAcc.getBalance());
+                        return ResponseEntity.ok(dto);
+                    });
                 });
     }
 

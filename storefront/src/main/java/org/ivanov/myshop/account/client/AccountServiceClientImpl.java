@@ -2,7 +2,7 @@ package org.ivanov.myshop.account.client;
 
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.account.dto.BalanceResponseDto;
-import org.ivanov.myshop.account.session.AccountProvider;
+import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import org.ivanov.myshop.configuration.AccountServiceProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -27,16 +27,30 @@ public class AccountServiceClientImpl implements AccountServiceClient {
                             .build(userIp))
                     .exchangeToMono(this::setHeader)
                     .onErrorResume(e -> {
-                        // Проверяем, является ли исключение WebClientResponseException
                         if (e instanceof WebClientRequestException) {
-                            // Логируем ошибку
                             System.err.println("Ошибка WebClient: " + e.getMessage());
-                            // Пробрасываем исключение наверх
                             return Mono.just(new BalanceResponseDto());
                         }
                         return Mono.error(new RuntimeException(e.getMessage()));
                     });
 
+    }
+
+    @Override
+    public Mono<BalanceResponseDto> processOrder(Long xVer, ProcessPaymentDto dto) {
+        return webClient.patch()
+                .uri(accountServiceProperties.getMethods().get("patch-processOrder"))
+                .header("X-Ver", xVer.toString())
+                .bodyValue(dto)
+                .retrieve()
+                .bodyToMono(BalanceResponseDto.class)
+                .onErrorResume(e -> {
+                    if (e instanceof WebClientRequestException) {
+                        System.err.println("Ошибка WebClient: " + e.getMessage());
+                        return Mono.just(new BalanceResponseDto());
+                    }
+                    return Mono.error(new RuntimeException(e.getMessage()));
+                });
     }
 
     private Mono<BalanceResponseDto> setHeader(ClientResponse clientResponse) {
