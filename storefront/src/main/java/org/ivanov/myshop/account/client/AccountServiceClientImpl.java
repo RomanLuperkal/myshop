@@ -1,9 +1,13 @@
 package org.ivanov.myshop.account.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.account.dto.BalanceResponseDto;
 import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import org.ivanov.myshop.configuration.AccountServiceProperties;
+import org.ivanov.myshop.handler.exception.CartException;
+import org.ivanov.myshop.handler.response.ApiError;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,11 +20,11 @@ import reactor.core.publisher.Mono;
 public class AccountServiceClientImpl implements AccountServiceClient {
     private final WebClient webClient;
     private final AccountServiceProperties accountServiceProperties;
+    private final ObjectMapper objectMapper;
 
 
     @Override
     public Mono<BalanceResponseDto> getBalance(String userIp) {
-
             return webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path(accountServiceProperties.getMethods().get("get-getBalance"))
@@ -28,7 +32,7 @@ public class AccountServiceClientImpl implements AccountServiceClient {
                     .exchangeToMono(this::setHeader)
                     .onErrorResume(e -> {
                         if (e instanceof WebClientRequestException) {
-                            System.err.println("Ошибка WebClient: " + e.getMessage());
+                            System.out.println("Ошибка WebClient: " + e.getMessage());
                             return Mono.just(new BalanceResponseDto());
                         }
                         return Mono.error(new RuntimeException(e.getMessage()));
@@ -37,21 +41,28 @@ public class AccountServiceClientImpl implements AccountServiceClient {
     }
 
     @Override
-    //TODO Исключение на случай оптимистичной блокировки
     public Mono<BalanceResponseDto> processOrder(Long xVer, ProcessPaymentDto dto) {
         return webClient.patch()
                 .uri(accountServiceProperties.getMethods().get("patch-processOrder"))
                 .header("X-Ver", xVer.toString())
                 .bodyValue(dto)
                 .retrieve()
-                .bodyToMono(BalanceResponseDto.class)
-                .onErrorResume(e -> {
-                    if (e instanceof WebClientRequestException) {
-                        System.err.println("Ошибка WebClient: " + e.getMessage());
-                        return Mono.just(new BalanceResponseDto());
-                    }
-                    return Mono.error(new RuntimeException(e.getMessage()));
-                });
+                .onStatus(
+                        status -> status == HttpStatus.CONFLICT, // Проверяем статус 409
+                        response -> response.bodyToMono(String.class)
+                                .flatMap(body -> {
+                                    System.err.println("Ошибка 409 Conflict: " + body);
+
+                                    try {
+                                        ApiError errorResponse = objectMapper.readValue(body, ApiError.class);
+
+                                        return Mono.error(new CartException(HttpStatus.CONFLICT, errorResponse.getMessage()));
+                                    } catch (Exception parseException) {
+                                        return Mono.error(new RuntimeException(parseException.getMessage()));
+                                    }
+                                })
+                )
+                .bodyToMono(BalanceResponseDto.class);
     }
 
     private Mono<BalanceResponseDto> setHeader(ClientResponse clientResponse) {

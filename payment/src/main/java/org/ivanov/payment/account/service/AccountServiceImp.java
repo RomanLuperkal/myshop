@@ -21,7 +21,7 @@ public class AccountServiceImp implements AccountService {
 
     @Override
     public Mono<ResponseEntity<BalanceResponseDto>> processOrder(Long xVer, ProcessPaymentDto processPaymentDto) {
-        return accountRepository.findAccountByUserIp(processPaymentDto.getUserIp())
+        return accountRepository.findAccountByUserIp("0:0:0:0:0:0:0:1")
                 .switchIfEmpty(Mono.error(new AccountException(HttpStatus.NOT_FOUND, "Аккаунт userId=" + processPaymentDto.getUserIp() + " не найден")))
                 .flatMap(acc -> {
                     if (!acc.getVersion().equals(xVer)) {

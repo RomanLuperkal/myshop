@@ -7,6 +7,9 @@ import org.ivanov.myshop.cart.model.Cart;
 import org.ivanov.myshop.cart.proection.ConfirmCart;
 import org.ivanov.myshop.cart_item.model.CartItems;
 import org.ivanov.myshop.product.model.Product;
+import org.springframework.mock.web.server.MockWebSession;
+import org.springframework.web.server.WebSession;
+import reactor.util.context.Context;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,6 +21,14 @@ public abstract class CartTestBase {
     protected final String USER_IP = "127.0.0.1";
     protected CreateCartDto getCreateCartDto() {
         return new CreateCartDto(1L, 1);
+    }
+
+    protected Context getContext() {
+        WebSession webSession = new MockWebSession();
+        webSession.getAttributes().put("balance", new BigDecimal("100"));
+        webSession.getAttributes().put("paymentServiceAvailable", true);
+        webSession.getAttributes().put("X-Ver", "1");
+        return Context.of("webSession", webSession);
     }
 
     protected Product getProduct() {

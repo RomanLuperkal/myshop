@@ -13,7 +13,7 @@ spring:
 
   data:
     redis:
-      host: localhost
+      host: ${REDIS_HOST:localhost}
       port: 6379
       password: ${REDIS_PASSWORD:admin}
       lettuce:
@@ -43,7 +43,7 @@ admin:
 
 rest:
   account-service:
-    host: http://localhost:8081
+    host:  ${PAYMENT_URL:http://localhost:8081}
     methods:
       patch-processOrder: /account/processPayment
       get-getBalance: /account/balance/{userIp}

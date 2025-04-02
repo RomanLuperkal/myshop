@@ -2,8 +2,8 @@ version: '3.8'
 services:
   storefront-server:
     build: ./storefront
-    image: myshop-image
-    container_name: myshop
+    image: storefront-image
+    container_name: storefront
     depends_on:
       - myshop-db
       - redis
@@ -17,7 +17,24 @@ services:
       - DB_PORT=5432
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=mysecretpassword  # Передаём пароль Redis в stats-server
+      - REDIS_PASSWORD=admin
+      - PAYMENT_URL=http://payment-server:8081
+
+  payment-server:
+    build: ./payment
+    image: payment-image
+    container_name: payment
+    depends_on:
+      - myshop-db
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_NAME=myshop
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - DB_HOST=myshop-db
+      - DB_PORT=5432
+
 
   myshop-db:
     image: postgres:15.1-alpine

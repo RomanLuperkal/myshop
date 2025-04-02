@@ -2,6 +2,8 @@ package org.ivanov.myshop.cart.service;
 
 import lombok.SneakyThrows;
 import org.ivanov.myshop.account.client.AccountServiceClient;
+import org.ivanov.myshop.account.dto.BalanceResponseDto;
+import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import org.ivanov.myshop.cart.CartTestBase;
 import org.ivanov.myshop.cart.dto.CreateCartDto;
 import org.ivanov.myshop.cart.dto.DeleteCartDto;
@@ -28,6 +30,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.context.Context;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -102,12 +105,17 @@ public class CartServiceTest extends CartTestBase {
         CreateCartDto exceptingCartDto = getCreateCartDto();
         Product exceptingProduct = getProduct();
         Cart exceptingCart = getCart();
+
+        Context context = getContext();
         when(productRepository.findById(exceptingCartDto.productId())).thenReturn(Mono.just(exceptingProduct));
         when(cartRepository.findByUserIpAndStatus(USER_IP, Status.CREATED)).thenReturn(Mono.just(exceptingCart));
         when(cartRepository.save(any(Cart.class))).thenReturn(Mono.just(exceptingCart));
         when(cartItemRepository.saveAll(anyIterable())).thenReturn(Flux.fromIterable(exceptingCart.getOrderedProducts()));
 
-        StepVerifier.create(cartService.addToCart(exceptingCartDto, USER_IP))
+        StepVerifier.create(
+                        cartService.addToCart(exceptingCartDto, USER_IP)
+                                .contextWrite(context)
+                )
                 .assertNext(response -> {
                     assertTrue(response.message().contains(exceptingProduct.getProductName()));
                     assertTrue(response.message().contains(exceptingCartDto.count().toString()));
@@ -128,7 +136,7 @@ public class CartServiceTest extends CartTestBase {
         when(cartRepository.save(any(Cart.class))).thenReturn(Mono.just(exceptingCart));
         when(cartItemRepository.delete(any())).thenReturn(Mono.empty());
 
-        StepVerifier.create(cartService.removeFromCart(exceptingCartDto, USER_IP))
+        StepVerifier.create(cartService.removeFromCart(exceptingCartDto, USER_IP).contextWrite(getContext()))
                 .assertNext(response -> {
                     assertTrue(response.message().contains(exceptingProduct.getProductName()));
                     assertTrue(response.message().contains(exceptingCartDto.count().toString()));
@@ -144,9 +152,12 @@ public class CartServiceTest extends CartTestBase {
     void getActualCartTest() {
         Cart exceptingCart = getCart();
         Product exceptingProduct = getProduct();
+        BalanceResponseDto balanceResponseDto = new BalanceResponseDto();
+        balanceResponseDto.setBalance(new BigDecimal(100));
         when(cartRepository.findByUserIpAndStatus(USER_IP, Status.CREATED)).thenReturn(Mono.just(exceptingCart));
+        when(accountService.getBalance(USER_IP)).thenReturn(Mono.just(balanceResponseDto));
 
-        StepVerifier.create(cartService.getActualCart(USER_IP))
+        StepVerifier.create(cartService.getActualCart(USER_IP).contextWrite(getContext()))
                 .assertNext(response -> {
                     assertEquals(exceptingProduct.getProductName(), response.cartItems().getFirst().productName());
                     assertEquals(exceptingProduct.getPrice(), response.cartItems().getFirst().price());
@@ -157,14 +168,21 @@ public class CartServiceTest extends CartTestBase {
         verify(cartRepository, times(1)).findByUserIpAndStatus(USER_IP, Status.CREATED);
     }
 
-    /*@Test
+    @Test
     void confirmCartTest() {
         Cart exceptingCart = getCart();
+        ProcessPaymentDto processPaymentDto = new ProcessPaymentDto();
+        processPaymentDto.setUserIp(USER_IP);
+        processPaymentDto.setOrderSum(new BigDecimal(1));
+        BalanceResponseDto balanceResponseDto = new BalanceResponseDto();
+        balanceResponseDto.setBalance(new BigDecimal(100));
         when(cartRepository.findByUserIpAndStatus(USER_IP, Status.CREATED)).thenReturn(Mono.just(exceptingCart));
         when(cartRepository.save(any(Cart.class))).thenReturn(Mono.just(exceptingCart));
         when(productRepository.saveAll(anyIterable())).thenReturn(Flux.empty());
+        when(accountService.processOrder(any(), any())).thenReturn(Mono.just(balanceResponseDto));
 
-        StepVerifier.create(cartService.confirmCart(USER_IP))
+
+        StepVerifier.create(cartService.confirmCart(processPaymentDto).contextWrite(getContext()))
                 .assertNext(cartId -> {
                     assertEquals(exceptingCart.getCartId(), cartId);
                     assertNotNull(exceptingCart.getConfirmedDate());
@@ -173,7 +191,7 @@ public class CartServiceTest extends CartTestBase {
                 .verifyComplete();
 
         verify(cartRepository, times(1)).findByUserIpAndStatus(USER_IP, Status.CREATED);
-    }*/
+    }
 
     @Test
     void getConfirmCartListTest() {
@@ -207,7 +225,7 @@ public class CartServiceTest extends CartTestBase {
         when(cartRepository.save(any())).thenReturn(Mono.just(exceptingCart));
         when(cartItemRepository.saveAll(anyIterable())).thenReturn(Flux.fromIterable(exceptingCart.getOrderedProducts()));
 
-        StepVerifier.create(cartService.addToCart(exceptingCartDto, USER_IP))
+        StepVerifier.create(cartService.addToCart(exceptingCartDto, USER_IP).contextWrite(getContext()))
 
                 .assertNext(response -> assertAll(
                         () -> assertTrue(response.message().contains(exceptingProduct.getProductName())),
@@ -230,7 +248,7 @@ public class CartServiceTest extends CartTestBase {
         when(cartRepository.save(any())).thenReturn(Mono.just(exceptingCart));
         when(cartItemRepository.saveAll(anyIterable())).thenReturn(Flux.fromIterable(exceptingCart.getOrderedProducts()));
 
-        StepVerifier.create(cartService.addToCart(exceptingCartDto, USER_IP))
+        StepVerifier.create(cartService.addToCart(exceptingCartDto, USER_IP).contextWrite(getContext()))
 
                 .assertNext(response -> assertAll(
                         () -> assertTrue(response.message().contains(exceptingProduct.getProductName())),
@@ -253,7 +271,7 @@ public class CartServiceTest extends CartTestBase {
         when(cartItemRepository.delete(any())).thenReturn(Mono.empty());
         when(cartItemRepository.save(any())).thenReturn(Mono.empty());
 
-        StepVerifier.create(cartService.removeFromCart(exceptingCartDto, USER_IP))
+        StepVerifier.create(cartService.removeFromCart(exceptingCartDto, USER_IP).contextWrite(getContext()))
 
                 .assertNext(response -> assertAll(
                         () -> verify(cartRepository, times(1)).findByUserIpAndStatus(USER_IP, Status.CREATED)
@@ -270,12 +288,13 @@ public class CartServiceTest extends CartTestBase {
         when(productRepository.findById(exceptingProduct.getProductId())).thenReturn(Mono.just(exceptingProduct));
         when(cartItemRepository.delete(any())).thenReturn(Mono.empty());
 
-        StepVerifier.create(cartService.deleteProductFromCart(exceptingProduct.getProductId(), USER_IP)).verifyComplete();
+        StepVerifier.create(cartService.deleteProductFromCart(exceptingProduct.getProductId(), USER_IP).contextWrite(getContext()))
+                .assertNext(response -> assertAll(
+                                () -> verify(productRepository, times(1)).findById(exceptingProduct.getProductId()),
+                                () -> verify(cartRepository, times(1)).findByUserIpAndStatus(USER_IP, Status.CREATED)
+                        ));
 
-        assertAll(
-                () -> verify(productRepository, times(1)).findById(exceptingProduct.getProductId()),
-                () -> verify(cartRepository, times(1)).findByUserIpAndStatus(USER_IP, Status.CREATED)
-        );
+
     }
 
     @Test

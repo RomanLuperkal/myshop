@@ -75,7 +75,10 @@ public class CartServiceImpl implements CartService {
         Mono<BalanceResponseDto> balanceResponseDto = accountServiceClient.getBalance(userIp);
         Mono<Cart> cart = getActualUsrCart(userIp);
         return Mono.zip(cart, balanceResponseDto)
-                .flatMap(this::prepareActualCart);
+                .flatMap(tuple -> {
+                    System.out.println(tuple.getT2().getBalance());
+                   return prepareActualCart(tuple);
+                });
     }
 
     @Override
@@ -97,7 +100,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "cart", key = "#dto.userIp")
+    @CacheEvict(value = "cart", key = "#dto.userIp", beforeInvocation = true)
     public Mono<Long> confirmCart(ProcessPaymentDto dto) {
         return Mono.deferContextual(context -> {
             WebSession webSession = context.get("webSession");
@@ -286,7 +289,6 @@ public class CartServiceImpl implements CartService {
 
     private Boolean isPaymentServiceAvailable(ContextView context) {
         WebSession session = context.get("webSession");
-        Boolean isPaymentServiceAvailable = Boolean.parseBoolean((String) session.getAttributes().get("payment"));
-        return isPaymentServiceAvailable;
+        return Boolean.parseBoolean((String) session.getAttributes().get("payment"));
     }
 }
