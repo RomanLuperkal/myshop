@@ -37,6 +37,7 @@ public class AccountServiceClientImpl implements AccountServiceClient {
     }
 
     @Override
+    //TODO Исключение на случай оптимистичной блокировки
     public Mono<BalanceResponseDto> processOrder(Long xVer, ProcessPaymentDto dto) {
         return webClient.patch()
                 .uri(accountServiceProperties.getMethods().get("patch-processOrder"))

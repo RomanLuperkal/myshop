@@ -3,6 +3,7 @@ package org.ivanov.myshop.cart.service;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.account.client.AccountServiceClient;
 import org.ivanov.myshop.account.dto.BalanceResponseDto;
+import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.enums.Status;
 import org.ivanov.myshop.cart.mapper.CartMapper;
@@ -96,13 +97,12 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "cart", key = "#userIp")
-    public Mono<Long> confirmCart(String userIp) {
+    @CacheEvict(value = "cart", key = "#dto.userIp")
+    public Mono<Long> confirmCart(ProcessPaymentDto dto) {
         return Mono.deferContextual(context -> {
             WebSession webSession = context.get("webSession");
-            Long xVer = webSession.getAttribute("xVer");
-            //accountServiceClient.processOrder()
-            return getActualUsrCart(userIp)
+            Long xVer = Long.parseLong(webSession.getAttribute("X-Ver"));
+            return accountServiceClient.processOrder(xVer, dto).flatMap(response -> getActualUsrCart(dto.getUserIp())
                     .flatMap(cart -> {
                         cart.setConfirmedDate(LocalDateTime.now());
                         cart.setStatus(Status.DONE);
@@ -110,7 +110,8 @@ public class CartServiceImpl implements CartService {
                         return processCart(cart)
                                 .then(cartRepository.save(cart))
                                 .thenReturn(cart.getCartId());
-                    });
+                    }));
+
         });
     }
 
@@ -275,7 +276,7 @@ public class CartServiceImpl implements CartService {
 
     private Boolean isBalancePositive(ContextView context, Cart cart) {
         WebSession session = context.get("webSession");
-        if  (session.getAttributes().containsKey("balance")) {
+        if  (session.getAttributes().containsKey("balance") && !cart.getOrderedProducts().isEmpty()) {
             BigDecimal balance = (BigDecimal) session.getAttributes().get("balance");
             BigDecimal totalCount = calcTotalCount(cart);
             return balance.compareTo(totalCount) >= 0;

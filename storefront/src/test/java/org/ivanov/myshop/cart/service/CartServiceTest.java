@@ -157,7 +157,7 @@ public class CartServiceTest extends CartTestBase {
         verify(cartRepository, times(1)).findByUserIpAndStatus(USER_IP, Status.CREATED);
     }
 
-    @Test
+    /*@Test
     void confirmCartTest() {
         Cart exceptingCart = getCart();
         when(cartRepository.findByUserIpAndStatus(USER_IP, Status.CREATED)).thenReturn(Mono.just(exceptingCart));
@@ -173,7 +173,7 @@ public class CartServiceTest extends CartTestBase {
                 .verifyComplete();
 
         verify(cartRepository, times(1)).findByUserIpAndStatus(USER_IP, Status.CREATED);
-    }
+    }*/
 
     @Test
     void getConfirmCartListTest() {

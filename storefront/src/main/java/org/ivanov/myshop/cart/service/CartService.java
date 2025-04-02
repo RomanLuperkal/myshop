@@ -1,5 +1,6 @@
 package org.ivanov.myshop.cart.service;
 
+import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import org.ivanov.myshop.cart.dto.*;
 import reactor.core.publisher.Mono;
 
@@ -14,7 +15,7 @@ public interface CartService {
 
     Mono<ConfirmCartResponseDto> getConfirmCart(Long cartId);
 
-    Mono<Long> confirmCart(String userIp);
+    Mono<Long> confirmCart(ProcessPaymentDto dto);
 
     Mono<ListConfirmCartDto> getConfirmCartList(String userIp);
 }

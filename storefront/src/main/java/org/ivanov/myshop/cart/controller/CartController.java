@@ -1,6 +1,7 @@
 package org.ivanov.myshop.cart.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.service.CartService;
 import org.springframework.stereotype.Controller;
@@ -55,9 +56,10 @@ public class CartController {
 
     @PutMapping("/confirm")
     @ResponseBody
-    public Mono<Long> confirmCart(ServerWebExchange exchange) {
+    public Mono<Long> confirmCart(ServerWebExchange exchange, @RequestBody ProcessPaymentDto dto) {
         String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
-        return cartService.confirmCart(hostAddress);
+        dto.setUserIp(hostAddress);
+        return cartService.confirmCart(dto);
     }
 
     @GetMapping("/confirm")

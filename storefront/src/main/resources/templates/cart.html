@@ -70,7 +70,7 @@
         <button
                 class="btn btn-success"
                 id="confirm-order"
-                th:disabled="${!cart.isBalancePositive and !cart.isPaymentServiceAvailable}">
+                th:disabled="${!cart.isBalancePositive or !cart.isPaymentServiceAvailable}">
             Оформить заказ
         </button>
     </div>
@@ -93,26 +93,15 @@
         }
     }
 
-    // Инициализация состояния кнопки при загрузке страницы
-    /*document.addEventListener('DOMContentLoaded', () => {
-        checkCartItems(); // Проверяем наличие товаров при загрузке страницы
-
-        // Обработчики событий для изменения количества
-        document.querySelectorAll('.increase-btn, .decrease-btn, .remove-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                setTimeout(checkCartItems, 100); // Проверяем наличие товаров после изменения
-            });
-        });
-    });*/
-
     document.addEventListener('DOMContentLoaded', () => {
         const cartMessageElement = document.getElementById('cart-message');
         const balanceAlert = cartMessageElement ? cartMessageElement.getAttribute('data-message') : null;
-        console.log("Сообщение из data-атрибута:", balanceAlert); // Отладочный вывод
+        console.log("Сообщение из data-атрибута:", balanceAlert);
         if (balanceAlert) {
             alert(balanceAlert);
         }
         updateCartTotal();
+        //checkCartItems();
     });
     // Функция для пересчёта общей цены корзины
     function updateCartTotal() {
@@ -120,9 +109,9 @@
         document.querySelectorAll('#cart-items tr').forEach(row => {
             const unitPrice = parseFloat(row.querySelector('.unit-price').innerText.replace(' ₽', ''));
             const quantity = parseInt(row.querySelector('.quantity-input').value);
-            const totalPrice = (unitPrice * quantity).toFixed(2); // Округляем до 2 знаков
+            const totalPrice = (unitPrice * quantity).toFixed(2);
             row.querySelector('.total-price').innerText = `${totalPrice} ₽`;
-            total += parseFloat(totalPrice); // Преобразуем обратно в число для суммирования
+            total += parseFloat(totalPrice);
         });
         document.getElementById('total-cart-price').innerText = `${total.toFixed(2)} ₽`; // Округляем итоговую сумму
     }
@@ -297,9 +286,6 @@
                         // Обновляем состояние кнопки
                         confirmOrderButton.disabled = !isBalancePositive || !isPaymentServiceAvailable;
 
-                        if (!isBalancePositive && !isPaymentServiceAvailable) {
-                            checkCartItems();
-                        }
                         // Выводим сообщение из ответа (если есть)
                         if (body.message) {
                             alert(body.message);
@@ -323,11 +309,29 @@
         document.getElementById('confirm-order').addEventListener('click', () => {
             const url = '/carts/confirm';
 
+            const totalPriceElement = document.getElementById('total-cart-price');
+            let totalPriceText = totalPriceElement.innerText; // Получаем текст, например, "1234.56 ₽"
+
+            // Удаляем символ валюты и пробелы, затем преобразуем в число
+            let orderSum = parseFloat(totalPriceText.replace(/[^\d.-]/g, '')); // Убираем всё, кроме цифр, точки и минуса
+
+            // Проверяем, что значение корректно
+            if (isNaN(orderSum)) {
+                alert("Ошибка: не удалось получить сумму заказа.");
+                return;
+            }
+
+            // Формируем DTO для отправки
+            const processPaymentDto = {
+                orderSum: orderSum, // Это будет автоматически преобразовано в JSON как число
+            };
+
             fetch(url, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify(processPaymentDto) // Преобразуем DTO в JSON
             })
                 .then(response => {
                     if (!response.ok) {
