@@ -16,8 +16,8 @@ public class AccountController implements AccountApi {
     private final AccountService accountService;
 
     @Override
-    public Mono<ResponseEntity<BalanceResponseDto>> accountBalanceUserIpGet(String userIp, ServerWebExchange exchange) {
-        return accountService.getBalance("0:0:0:0:0:0:0:1");
+    public Mono<ResponseEntity<BalanceResponseDto>> accountBalanceAccountIdGet(Long accountId, ServerWebExchange exchange) {
+        return accountService.getBalance(accountId);
     }
 
     @Override

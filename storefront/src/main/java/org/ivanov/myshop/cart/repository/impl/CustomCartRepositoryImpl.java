@@ -24,7 +24,7 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
     private final R2dbcEntityTemplate entityTemplate;
     private final String SELECT_CART_BY_USER_IP_AND_STATUS = """
             SELECT c.curt_id,
-                   c.user_ip,
+                   c.account_id,
                    c.creation_date,
                    c.confirmed_date,
                    c.status,
@@ -39,7 +39,7 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
             FROM cart c
                      LEFT JOIN cart_items ci ON c.curt_id = ci.curt_id
                      LEFT JOIN product p ON ci.product_id = p.product_id
-            WHERE c.user_ip = :userIp
+            WHERE c.account_id = :accountId
               AND c.status = :status
             """;
 
@@ -52,10 +52,10 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
             """;
 
     @Override
-    public Mono<Cart> findByUserIpAndStatus(String userIp, Status status) {
+    public Mono<Cart> findByAccountIdAndStatus(Long accountId, Status status) {
         return entityTemplate.getDatabaseClient()
                 .sql(SELECT_CART_BY_USER_IP_AND_STATUS)
-                .bind("userIp", userIp)
+                .bind("accountId", accountId)
                 .bind("status", status.toString())
                 .fetch()
                 .all()
@@ -103,7 +103,7 @@ public class CustomCartRepositoryImpl implements CustomCartRepository {
     private Cart mapCart(Map<String, Object> row) {
         Cart cart = new Cart();
         cart.setCartId((Long) row.get("curt_id"));
-        cart.setUserIp((String) row.get("user_ip"));
+        cart.setAccountId((Long) row.get("account_id"));
         cart.setCreationDate((LocalDateTime) row.get("creation_date"));
         cart.setConfirmedDate((LocalDateTime) row.get("confirmed_date"));
         cart.setStatus(Status.valueOf((String) row.get("status")));

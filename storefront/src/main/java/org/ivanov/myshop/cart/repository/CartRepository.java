@@ -15,9 +15,9 @@ public interface CartRepository extends R2dbcRepository<Cart, Long>, CustomCartR
             FROM cart c
             JOIN cart_items ci on  c.curt_id = ci.curt_id
             JOIN product p on p.product_id = ci.product_id
-            WHERE c.user_ip = :userIp
+            WHERE c.account_id = :accountId
             AND c.status = 'DONE'
             group by c.confirmed_date, c.curt_id
             """)
-    Flux<ConfirmCart> getConfirmCartsByUserIp(@Param("userIp") String userIp);
+    Flux<ConfirmCart> getConfirmCartsByUserIp(@Param("accountId") Long accountId);
 }

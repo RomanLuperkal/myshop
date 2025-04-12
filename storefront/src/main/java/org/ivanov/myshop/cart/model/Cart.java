@@ -18,8 +18,8 @@ public class Cart {
     @Id
     @Column("curt_id")
     private Long cartId;
-    @Column("user_ip")
-    private String userIp;
+    @Column("account_id")
+    private Long accountId;
     @Column("creation_date")
     private LocalDateTime creationDate = LocalDateTime.now();
     @Column("confirmed_date")

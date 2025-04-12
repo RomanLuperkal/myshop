@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 public interface AccountService {
     Mono<ResponseEntity<BalanceResponseDto>> processOrder(Long xVer, ProcessPaymentDto processPaymentDto);
 
-    Mono<ResponseEntity<BalanceResponseDto>> getBalance(String userIp);
+    Mono<ResponseEntity<BalanceResponseDto>> getBalance(Long accountId);
 }

@@ -21,8 +21,8 @@ public class AccountServiceImp implements AccountService {
 
     @Override
     public Mono<ResponseEntity<BalanceResponseDto>> processOrder(Long xVer, ProcessPaymentDto processPaymentDto) {
-        return accountRepository.findAccountByUserIp("0:0:0:0:0:0:0:1")
-                .switchIfEmpty(Mono.error(new AccountException(HttpStatus.NOT_FOUND, "Аккаунт userId=" + processPaymentDto.getUserIp() + " не найден")))
+        return accountRepository.findAccountByAccountId(processPaymentDto.getAccountId())
+                .switchIfEmpty(Mono.error(new AccountException(HttpStatus.NOT_FOUND, "Аккаунт userId=" + processPaymentDto.getAccountId() + " не найден")))
                 .flatMap(acc -> {
                     if (!acc.getVersion().equals(xVer)) {
                         return Mono.error(new AccountException(HttpStatus.CONFLICT, "Данные аккаунта были изменены. Попробуйте еще раз"));
@@ -40,9 +40,9 @@ public class AccountServiceImp implements AccountService {
     }
 
     @Override
-    public Mono<ResponseEntity<BalanceResponseDto>> getBalance(String userIp) {
-        Mono<Account> account = accountRepository.findAccountByUserIp(userIp);
-        return account.switchIfEmpty(Mono.error(new AccountException(HttpStatus.NOT_FOUND, "Аккаунт userId=" + userIp + " не найден")))
+    public Mono<ResponseEntity<BalanceResponseDto>> getBalance(Long accountId) {
+        Mono<Account> account = accountRepository.findAccountByAccountId(accountId);
+        return account.switchIfEmpty(Mono.error(new AccountException(HttpStatus.NOT_FOUND, "Аккаунт accountId=" + accountId + " не найден")))
                 .map(acc -> {
                     BalanceResponseDto responseDto = new BalanceResponseDto();
                     responseDto.setBalance(acc.getBalance());
@@ -50,6 +50,5 @@ public class AccountServiceImp implements AccountService {
                             .header("X-Ver", acc.getVersion().toString())
                             .body(responseDto);
                 });
-
         }
     }

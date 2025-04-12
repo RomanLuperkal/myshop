@@ -10,5 +10,5 @@ import java.math.BigDecimal;
 public class ProcessPaymentDto {
     private BigDecimal orderSum;
 
-    private String userIp;
+    private Long accountId;
 }

@@ -5,7 +5,7 @@ import org.ivanov.myshop.cart.model.Cart;
 import reactor.core.publisher.Mono;
 
 public interface CustomCartRepository {
-    Mono<Cart> findByUserIpAndStatus(String userIp,Status status);
+    Mono<Cart> findByAccountIdAndStatus(Long accountId, Status status);
 
     Mono<Cart> getFullCartById(Long curtId);
 }

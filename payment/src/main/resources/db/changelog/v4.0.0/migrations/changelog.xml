@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet author="Roman" id="alter_account">
+        <sqlFile encoding="UTF-8" path="alter_account.sql" relativeToChangelogFile="true" endDelimiter=";" splitStatements="true"/>
+    </changeSet>
+
+    <changeSet author="Roman" id="delete_account">
+        <sqlFile encoding="UTF-8" path="delete_account.sql" relativeToChangelogFile="true" endDelimiter=";" splitStatements="true"/>
+    </changeSet>
+
+</databaseChangeLog>

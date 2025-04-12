@@ -5,7 +5,7 @@ import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import reactor.core.publisher.Mono;
 
 public interface AccountServiceClient {
-    Mono<BalanceResponseDto> getBalance(String userIp);
+    Mono<BalanceResponseDto> getBalance(Long accountId);
 
     Mono<BalanceResponseDto> processOrder(Long xVer, ProcessPaymentDto dto);
 }

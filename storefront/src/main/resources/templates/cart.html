@@ -310,7 +310,7 @@
             const url = '/carts/confirm';
 
             const totalPriceElement = document.getElementById('total-cart-price');
-            let totalPriceText = totalPriceElement.innerText; // Получаем текст, например, "1234.56 ₽"
+            let totalPriceText = totalPriceElement.innerText; // Получаем текст
 
             // Удаляем символ валюты и пробелы, затем преобразуем в число
             let orderSum = parseFloat(totalPriceText.replace(/[^\d.-]/g, '')); // Убираем всё, кроме цифр, точки и минуса

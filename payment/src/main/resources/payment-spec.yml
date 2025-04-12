@@ -4,19 +4,19 @@ info:
   description: API сервиса платежей
   version: 1.0.0
 paths:
-  /account/balance/{userIp}:
+  /account/balance/{accountId}:
     get:
       tags:
         - account
       summary: Получить баланс на счете
       parameters:
-        - $ref: '#/components/parameters/UserIp'
+        - $ref: '#/components/parameters/AccountId'
       responses:
         '200':
           description: Успешный ответ
           headers:
-              X-ver:
-                $ref: '#/components/headers/X-Ver'
+            X-ver:
+              $ref: '#/components/headers/X-Ver'
           content:
             application/json:
               schema:
@@ -86,25 +86,19 @@ components:
         balance:
           type: number
           example: 10.5
-    BalanceReqDto:
-      description: Инф-я о пользователе для получения его текущего баланса
-      type: object
-      properties:
-        userIp:
-          type: string
-          example: 0:0:0:0:0:0:0:1
     ProcessPaymentDto:
       type: object
       required:
         - orderSum
-        - userIp
+        - accountId
       properties:
         orderSum:
           type: number
           example: 10.5
-        userIp:
-          type: string
-          example: 0:0:0:0:0:0:0:1
+        accountId:
+          type: integer
+          format: int64
+          example: 3252352
     ApiError:
       description: описание ошибки
       type: object
@@ -117,10 +111,11 @@ components:
           example: аккаунт не найден
 
   parameters:
-    UserIp:
-      name: userIp
+    AccountId:
+      name: accountId
       in: path
-      description: IP-адрес пользователя
+      description: идентификатор пользователя
       required: true
       schema:
-        type: string
+        type: integer
+        format: int64

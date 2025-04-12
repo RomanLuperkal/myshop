@@ -23,7 +23,7 @@ public abstract class CartTestBase {
         return new CreateCartDto(1L, 1);
     }
 
-    protected Context getContext() {
+    /*protected Context getContext() {
         WebSession webSession = new MockWebSession();
         webSession.getAttributes().put("balance", new BigDecimal("100"));
         webSession.getAttributes().put("paymentServiceAvailable", true);
@@ -56,7 +56,7 @@ public abstract class CartTestBase {
         cartItems.setCart(cart);
         cart.setCartId(1L);
         cart.setStatus(Status.CREATED);
-        cart.setUserIp(USER_IP);
+        cart.setAccountId(USER_IP);
         cart.setCreationDate(LocalDateTime.now());
         cart.setOrderedProducts(new HashSet<>(List.of(cartItems)));
         cart.setConfirmedDate(LocalDateTime.now().plusHours(1));
@@ -72,5 +72,5 @@ public abstract class CartTestBase {
         ConfirmCart confirmCart = new ConfirmCart(1L, LocalDateTime.now(), new BigDecimal("1.5"));
         confirmCarts.add(confirmCart);
         return confirmCarts;
-    }
+    }*/
 }

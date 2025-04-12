@@ -7,6 +7,7 @@ services:
     depends_on:
       - myshop-db
       - redis
+      - keycloak
     ports:
       - "8080:8080"
     environment:
@@ -26,6 +27,7 @@ services:
     container_name: payment
     depends_on:
       - myshop-db
+      - keycloak
     ports:
       - "8081:8081"
     environment:
@@ -58,3 +60,14 @@ services:
     environment:
       - REDIS_PASSWORD=admin
     command: ["redis-server", "--requirepass", "admin"]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.3
+    container_name: keycloak
+    ports:
+      - "8082:8082"
+    environment:
+      - KC_HTTP_PORT=8082
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    command: [ "start-dev" ] # Запуск в режиме разработки

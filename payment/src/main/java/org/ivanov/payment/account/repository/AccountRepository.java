@@ -7,5 +7,5 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface AccountRepository extends ReactiveCrudRepository<Account, Long> {
-    Mono<Account> findAccountByUserIp(String userIp);
+    Mono<Account> findAccountByAccountId(Long accountId);
 }

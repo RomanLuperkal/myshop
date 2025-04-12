@@ -45,35 +45,35 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "cart", key = "#userIp")
-    public Mono<CartResponseDto> addToCart(CreateCartDto dto, String userIp) {
+    @CacheEvict(value = "cart", key = "#accountId")
+    public Mono<CartResponseDto> addToCart(CreateCartDto dto, Long accountId) {
         Mono<Product> findProduct = getProductById(dto.productId()).flatMap(p -> {
             if (p.getCount() < dto.count()) {
                 return Mono.error(new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе"));
             }
             return Mono.just(p);
         });
-        Mono<Cart> actualCart = getActualUsrCart(userIp);
-        return Mono.zip(findProduct, actualCart).flatMap(tuple -> prepareAddCart(tuple, dto, userIp));
+        Mono<Cart> actualCart = getActualUsrCart(accountId);
+        return Mono.zip(findProduct, actualCart).flatMap(tuple -> prepareAddCart(tuple, dto, accountId));
     }
 
 
     @Override
     @Transactional
-    @CacheEvict(value = "cart", key = "#userIp")
-    public Mono<CartResponseDto> removeFromCart(DeleteCartDto dto, String userIp) {
+    @CacheEvict(value = "cart", key = "#accountId")
+    public Mono<CartResponseDto> removeFromCart(DeleteCartDto dto, Long accountId) {
         Mono<Product> productMono = getProductById(dto.productId());
-        Mono<Cart> cartMono = getActualUsrCart(userIp);
+        Mono<Cart> cartMono = getActualUsrCart(accountId);
         return Mono.zip(productMono, cartMono)
                 .flatMap(tuple -> prepareRemoveCart(tuple, dto));
 
     }
 
     @Override
-    @Cacheable(value = "cart", key = "#userIp", unless = "#result == null || #result.cartItems?.isEmpty() || #result.isBalancePositive == false || #result.isPaymentServiceAvailable == false")
-    public Mono<ActualCartResponseDto> getActualCart(String userIp) {
-        Mono<BalanceResponseDto> balanceResponseDto = accountServiceClient.getBalance(userIp);
-        Mono<Cart> cart = getActualUsrCart(userIp);
+    @Cacheable(value = "cart", key = "#accountId", unless = "#result == null || #result.cartItems?.isEmpty() || #result.isBalancePositive == false || #result.isPaymentServiceAvailable == false")
+    public Mono<ActualCartResponseDto> getActualCart(Long accountId) {
+        Mono<BalanceResponseDto> balanceResponseDto = accountServiceClient.getBalance(accountId);
+        Mono<Cart> cart = getActualUsrCart(accountId);
         return Mono.zip(cart, balanceResponseDto)
                 .flatMap(tuple -> {
                     System.out.println(tuple.getT2().getBalance());
@@ -82,10 +82,10 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @CacheEvict(value = "cart", key = "#userIp")
-    public Mono<CartResponseDto> deleteProductFromCart(Long productId, String userIp) {
+    @CacheEvict(value = "cart", key = "#accountId")
+    public Mono<CartResponseDto> deleteProductFromCart(Long productId, Long accountId) {
         Mono<Product> productMono = getProductById(productId);
-        Mono<Cart> cartMono = getActualUsrCart(userIp);
+        Mono<Cart> cartMono = getActualUsrCart(accountId);
         return Mono.zip(productMono, cartMono).flatMap(this::prepareDeleteProductFromCart);
     }
 
@@ -100,12 +100,12 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "cart", key = "#dto.userIp", beforeInvocation = true)
+    @CacheEvict(value = "cart", key = "#dto.accountId", beforeInvocation = true)
     public Mono<Long> confirmCart(ProcessPaymentDto dto) {
         return Mono.deferContextual(context -> {
             WebSession webSession = context.get("webSession");
             Long xVer = Long.parseLong(webSession.getAttribute("X-Ver"));
-            return accountServiceClient.processOrder(xVer, dto).flatMap(response -> getActualUsrCart(dto.getUserIp())
+            return accountServiceClient.processOrder(xVer, dto).flatMap(response -> getActualUsrCart(dto.getAccountId())
                     .flatMap(cart -> {
                         cart.setConfirmedDate(LocalDateTime.now());
                         cart.setStatus(Status.DONE);
@@ -119,8 +119,8 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Mono<ListConfirmCartDto> getConfirmCartList(String userIp) {
-        Flux<ConfirmCart> findConfirmCarts = cartRepository.getConfirmCartsByUserIp(userIp);
+    public Mono<ListConfirmCartDto> getConfirmCartList(Long accountId) {
+        Flux<ConfirmCart> findConfirmCarts = cartRepository.getConfirmCartsByUserIp(accountId);
         return findConfirmCarts.collectList().flatMap(confirmCarts -> Mono.just(cartMapper.mapToConfirmCartDto(confirmCarts)));
     }
 
@@ -153,10 +153,11 @@ public class CartServiceImpl implements CartService {
         if (product.getCount() < (dto.count() + cartItems.getCount())) {
             throw new ProductException(HttpStatus.CONFLICT, "Недостаточно товара на складе");
         }
+
     }
 
-    private Mono<Cart> getActualUsrCart(String userIp) {
-        return cartRepository.findByUserIpAndStatus(userIp, Status.CREATED)
+    private Mono<Cart> getActualUsrCart(Long accountId) {
+        return cartRepository.findByAccountIdAndStatus(accountId, Status.CREATED)
                 .switchIfEmpty(Mono.just(new Cart()));
     }
 
@@ -197,12 +198,12 @@ public class CartServiceImpl implements CartService {
         });
     }
 
-    private Mono<CartResponseDto> prepareAddCart(Tuple2<Product, Cart> tuple, CreateCartDto dto, String userIp) {
+    private Mono<CartResponseDto> prepareAddCart(Tuple2<Product, Cart> tuple, CreateCartDto dto, Long accountId) {
         return Mono.deferContextual(context -> {
             Cart cart = tuple.getT2();
             Product product = tuple.getT1();
             if (cart.getOrderedProducts().isEmpty()) {
-                cart.setUserIp(userIp);
+                cart.setAccountId(accountId);
                 prepareOrder(cart, product, dto);
             } else {
                 Optional<CartItems> curtItems = cart.getOrderedProducts().stream().filter(c -> c.getProduct().equals(product)).findFirst();

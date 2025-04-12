@@ -24,11 +24,11 @@ public class AccountServiceClientImpl implements AccountServiceClient {
 
 
     @Override
-    public Mono<BalanceResponseDto> getBalance(String userIp) {
+    public Mono<BalanceResponseDto> getBalance(Long accountId) {
             return webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path(accountServiceProperties.getMethods().get("get-getBalance"))
-                            .build(userIp))
+                            .build(accountId))
                     .exchangeToMono(this::setHeader)
                     .onErrorResume(e -> {
                         if (e instanceof WebClientRequestException) {
@@ -48,7 +48,7 @@ public class AccountServiceClientImpl implements AccountServiceClient {
                 .bodyValue(dto)
                 .retrieve()
                 .onStatus(
-                        status -> status == HttpStatus.CONFLICT, // Проверяем статус 409
+                        status -> status == HttpStatus.CONFLICT,
                         response -> response.bodyToMono(String.class)
                                 .flatMap(body -> {
                                     System.err.println("Ошибка 409 Conflict: " + body);
