@@ -1,11 +1,14 @@
 package org.ivanov.myshop.product.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.ivanov.myshop.configuration.security.AccountUserDetails;
 import org.ivanov.myshop.product.dto.ListProductDto;
 import org.ivanov.myshop.product.service.ProductService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

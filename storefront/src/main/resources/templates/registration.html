@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8"></meta>
-    <title>Login</title>
+    <title>Register</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,42 +24,34 @@
         .form-container button {
             width: 100%;
             padding: 10px;
-            background-color: #4CAF50;
+            background-color: #007BFF;
             color: white;
             border: none;
             cursor: pointer;
         }
         .form-container button:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
         }
         .error-message {
             color: red;
             margin-bottom: 10px;
         }
-        .register-link {
-            text-align: center;
-            margin-top: 10px;
-        }
-        .register-link a {
-            color: #007BFF;
-            text-decoration: none;
-        }
-        .register-link a:hover {
-            text-decoration: underline;
+        .success-message {
+            color: green;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 <div class="form-container">
-    <h2>Login</h2>
+    <h2>Register</h2>
 
-    <!-- Отображение ошибок -->
-    <div th:if="${error}" class="error-message">
-        Invalid username or password.
-    </div>
+    <!-- Сообщения об ошибках или успехе -->
+    <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+    <!--<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>-->
 
-    <!-- Форма входа -->
-    <form method="post" action="/login">
+    <!-- Форма регистрации -->
+    <form method="post" action="/register">
         <div>
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required />
@@ -70,13 +61,13 @@
             <input type="password" id="password" name="password" required />
         </div>
         <div>
-            <button type="submit">Login</button>
+            <button type="submit">Register</button>
         </div>
     </form>
 
-    <!-- Ссылка на регистрацию -->
-    <div class="register-link">
-        У вас нет учетной записи?  <a href="/register">Зарегистрируйтесь здесь</a>.
+    <!-- Ссылка на страницу входа -->
+    <div style="text-align: center; margin-top: 10px;">
+        Уже есть аккаунт? <a href="/login">Login here</a>.
     </div>
 </div>
 </body>

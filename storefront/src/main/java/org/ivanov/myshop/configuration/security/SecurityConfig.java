@@ -1,6 +1,8 @@
-package org.ivanov.myshop.configuration;
+package org.ivanov.myshop.configuration.security;
 
 import lombok.RequiredArgsConstructor;
+import org.ivanov.myshop.account.repository.AccountRepository;
+import org.ivanov.myshop.configuration.AdministratorConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -8,15 +10,13 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
@@ -32,16 +32,19 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
+                .securityContextRepository(new WebSessionServerSecurityContextRepository())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/login").permitAll()
+                        .pathMatchers("/login", "/register").permitAll()
+                        .pathMatchers("/products").hasRole("USER")
                         .pathMatchers("/admin/**").authenticated()
-                        .anyExchange().permitAll()
+                        .anyExchange().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .authenticationSuccessHandler(successHandler())
                 )
+                //.formLogin(Customizer.withDefaults())
                 .logout(logout -> logout
                         .logoutSuccessHandler(logoutSuccessHandler())
                 )
@@ -49,14 +52,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public ReactiveUserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails user = User.builder()
-                .username(administratorConfig.getLogin())
-                .password(passwordEncoder.encode(administratorConfig.getPassword()))
-                .roles(administratorConfig.getRole())
-                .build();
-
-        return new MapReactiveUserDetailsService(user);
+    public ReactiveUserDetailsService userDetailsService(AccountRepository accountRepository) {
+        return new AccountReactiveUserDetailsService(accountRepository);
     }
 
     @Bean
@@ -68,7 +65,7 @@ public class SecurityConfig {
         return (exchange, authentication) -> {
             ServerHttpResponse response = exchange.getExchange().getResponse();
             response.setStatusCode(HttpStatus.FOUND);
-            response.getHeaders().setLocation(URI.create("/admin/products"));
+            response.getHeaders().setLocation(URI.create("/products"));
             return Mono.empty();
         };
     }
