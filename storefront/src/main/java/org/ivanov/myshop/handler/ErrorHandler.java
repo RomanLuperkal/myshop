@@ -26,4 +26,10 @@ public class ErrorHandler {
                 .build();
         return ResponseEntity.status(e.getStatus()).body(errorResponse);
     }
+
+    /*@ExceptionHandler(AccountException.class)
+    private Mono<Rendering> handleException(AccountException e) {
+        Rendering r = Rendering.redirectTo("/register").modelAttribute("errorMessage", e.getMessage()).build();
+        return Mono.just(r);
+    }*/
 }

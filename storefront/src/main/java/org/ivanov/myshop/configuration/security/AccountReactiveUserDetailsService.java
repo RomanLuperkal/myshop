@@ -19,7 +19,7 @@ public class AccountReactiveUserDetailsService implements ReactiveUserDetailsSer
                             account.getAccountId(),
                             account.getUsername(),
                             account.getPassword(),
-                            AuthorityUtils.createAuthorityList("ROLE_USER")
+                            AuthorityUtils.createAuthorityList(account.getRole().toString())
                     )
                 );
     }

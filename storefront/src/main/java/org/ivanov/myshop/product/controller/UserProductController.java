@@ -1,14 +1,13 @@
 package org.ivanov.myshop.product.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.ivanov.myshop.configuration.security.AccountUserDetails;
+import lombok.extern.slf4j.Slf4j;
 import org.ivanov.myshop.product.dto.ListProductDto;
 import org.ivanov.myshop.product.service.ProductService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,13 +22,15 @@ import java.util.List;
 @Controller
 @RequestMapping("/products")
 @RequiredArgsConstructor
+@Slf4j
 public class UserProductController {
     private final ProductService productService;
 
     @GetMapping
     public Mono<Rendering> getProducts(@RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "10") int size,
-                                 @RequestParam(required = false) List<String> sort, @RequestParam(required = false) String search) {
+                                 @RequestParam(required = false) List<String> sort, @RequestParam(required = false) String search,
+                                       Authentication authentication) {
         Sort sortObj = parseSortParameters(sort);
 
         Pageable pageable = PageRequest.of(page, size, sortObj);

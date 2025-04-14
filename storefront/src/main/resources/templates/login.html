@@ -56,7 +56,7 @@
 
     <!-- Отображение ошибок -->
     <div th:if="${error}" class="error-message">
-        Invalid username or password.
+        Неверные логин пользователя или пароль.
     </div>
 
     <!-- Форма входа -->
@@ -73,6 +73,15 @@
             <button type="submit">Login</button>
         </div>
     </form>
+
+    <!-- Кнопка "Войти как гость" -->
+    <div style="text-align: center; margin-top: 10px;">
+        <form method="get" action="/products">
+            <button type="submit" style="background-color: #007BFF; color: white; padding: 10px; border: none; cursor: pointer;">
+                Войти как гость
+            </button>
+        </form>
+    </div>
 
     <!-- Ссылка на регистрацию -->
     <div class="register-link">

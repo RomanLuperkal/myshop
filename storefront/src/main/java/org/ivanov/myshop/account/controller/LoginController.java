@@ -3,6 +3,7 @@ package org.ivanov.myshop.account.controller;
 import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.account.dto.CreateAccountDto;
 import org.ivanov.myshop.account.service.AccountService;
+import org.ivanov.myshop.handler.exception.AccountException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -33,6 +34,13 @@ public class LoginController {
 
     @PostMapping("/register")
     public Mono<Rendering> register(@ModelAttribute CreateAccountDto accountDto) {
-        return accountService.createAccount(accountDto).thenReturn(Rendering.redirectTo("/login").build());
+        return accountService.createAccount(accountDto)
+                .thenReturn(Rendering.redirectTo("/login").build())
+                .onErrorResume(AccountException.class, e -> {
+                    Rendering r = Rendering.view("registration")
+                            .modelAttribute("errorMessage", e.getMessage())
+                            .build();
+                    return Mono.just(r);
+                });
     }
 }

@@ -6,6 +6,8 @@ import org.ivanov.myshop.account.mapper.AccountMapper;
 import org.ivanov.myshop.account.model.Account;
 
 import org.ivanov.myshop.account.repository.AccountRepository;
+import org.ivanov.myshop.handler.exception.AccountException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -20,7 +22,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Mono<Void> createAccount(CreateAccountDto createAccountDto) {
         return accountRepository.findByUsername(createAccountDto.getUsername())
-                .flatMap(existingAccount -> Mono.error(new RuntimeException("Account already exists")))
+                .flatMap(existingAccount -> Mono.error(new AccountException(HttpStatus.CONFLICT, "Такой аккаунт уже существует")))
                 .switchIfEmpty(createNewAccount(createAccountDto))
                 .then();
     }

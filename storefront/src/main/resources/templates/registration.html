@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"></meta>
     <title>Register</title>
     <style>
         body {
@@ -46,9 +47,8 @@
 <div class="form-container">
     <h2>Register</h2>
 
-    <!-- Сообщения об ошибках или успехе -->
+
     <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
-    <!--<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>-->
 
     <!-- Форма регистрации -->
     <form method="post" action="/register">
@@ -67,7 +67,7 @@
 
     <!-- Ссылка на страницу входа -->
     <div style="text-align: center; margin-top: 10px;">
-        Уже есть аккаунт? <a href="/login">Login here</a>.
+        Уже есть аккаунт? <a href="/login">Войти здесь</a>.
     </div>
 </div>
 </body>
