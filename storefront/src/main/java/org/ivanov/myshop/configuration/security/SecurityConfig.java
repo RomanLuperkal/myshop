@@ -31,6 +31,7 @@ import java.net.URI;
 public class SecurityConfig {
 
     private final AdministratorConfig administratorConfig;
+    private final SessionRegistry sessionRegistry;
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -69,7 +70,19 @@ public class SecurityConfig {
             ServerHttpResponse response = exchange.getExchange().getResponse();
             response.setStatusCode(HttpStatus.FOUND);
             response.getHeaders().setLocation(URI.create("/products"));
-            return Mono.empty();
+            return exchange.getExchange().getSession()
+                    .flatMap(session -> {
+                        String username = authentication.getName();
+                        String sessionId = session.getId();
+
+                        if (!sessionRegistry.isSessionAllowed(username, sessionId)) {
+                            return session.invalidate()
+                                    .then(exchange.getExchange().getResponse().setComplete());
+                        }
+
+                        sessionRegistry.registerSession(username, sessionId);
+                        return Mono.empty();
+                    });
         };
     }
 
@@ -85,8 +98,14 @@ public class SecurityConfig {
         return (exchange, authentication) -> {
             ServerHttpResponse response = exchange.getExchange().getResponse();
             response.setStatusCode(HttpStatus.FOUND);
-            response.getHeaders().setLocation(URI.create("/products"));
-            return Mono.empty();
+            response.getHeaders().setLocation(URI.create("/login"));
+            return exchange.getExchange().getSession().flatMap(session -> {
+                String username = authentication.getName();
+                String sessionId = session.getId();
+
+                sessionRegistry.unregisterSession(username, sessionId);
+                return session.invalidate();
+            });
         };
     }
 }
