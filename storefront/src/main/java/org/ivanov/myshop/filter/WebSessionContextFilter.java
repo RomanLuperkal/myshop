@@ -6,7 +6,7 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-@Component
+//@Component
 public class WebSessionContextFilter implements WebFilter {
 
     @Override

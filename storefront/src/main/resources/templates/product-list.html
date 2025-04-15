@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
 <head>
     <meta charset="UTF-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
@@ -80,11 +81,19 @@
 <body>
 
 <div class="top-buttons">
-    <a href="/carts/actual" class="btn btn-primary">Перейти в корзину</a>
-    <a href="/carts/confirm" class="btn btn-success">История заказов</a>
-    <form action="/logout" method="post" style="display: inline;">
-        <button type="submit" class="btn btn-success">Выйти</button>
-    </form>
+    <!-- Кнопки для авторизованных пользователей -->
+    <div sec:authorize="isAuthenticated()">
+        <a href="/carts/actual" class="btn btn-primary">Перейти в корзину</a>
+        <a href="/carts/confirm" class="btn btn-success">История заказов</a>
+        <form action="/logout" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-success">Выйти</button>
+        </form>
+    </div>
+
+    <!-- Кнопка для неавторизованных пользователей -->
+    <div sec:authorize="isAnonymous()">
+        <a href="/login" class="btn btn-success">Войти</a>
+    </div>
 </div>
 
 <a href="/login" class="admin-login-button">Войти как администратор</a>

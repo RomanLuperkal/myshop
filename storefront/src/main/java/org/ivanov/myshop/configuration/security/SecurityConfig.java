@@ -19,6 +19,7 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository;
+import org.springframework.session.data.redis.ReactiveRedisSessionRepository;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -32,6 +33,7 @@ public class SecurityConfig {
 
     private final AdministratorConfig administratorConfig;
     private final SessionRegistry sessionRegistry;
+    private final ReactiveRedisSessionRepository sessionRepository;
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -39,7 +41,7 @@ public class SecurityConfig {
                 .securityContextRepository(new WebSessionServerSecurityContextRepository())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/login", "/register", "/products", "/products/**").permitAll()
+                        .pathMatchers("/login", "/register", "/products", "/products/**", "/logout").permitAll()
                         .pathMatchers("/admin/**").hasRole("ADMIN")
                         .pathMatchers("/js/**").permitAll()
                         .anyExchange().authenticated()
@@ -74,10 +76,11 @@ public class SecurityConfig {
                     .flatMap(session -> {
                         String username = authentication.getName();
                         String sessionId = session.getId();
+                        String oldSession = sessionRegistry.getSessionId(username);
 
-                        if (!sessionRegistry.isSessionAllowed(username, sessionId)) {
-                            return session.invalidate()
-                                    .then(exchange.getExchange().getResponse().setComplete());
+                        if (oldSession != null) {
+                            sessionRegistry.registerSession(username, sessionId);
+                            return sessionRepository.deleteById(oldSession);
                         }
 
                         sessionRegistry.registerSession(username, sessionId);
@@ -101,9 +104,7 @@ public class SecurityConfig {
             response.getHeaders().setLocation(URI.create("/login"));
             return exchange.getExchange().getSession().flatMap(session -> {
                 String username = authentication.getName();
-                String sessionId = session.getId();
-
-                sessionRegistry.unregisterSession(username, sessionId);
+                sessionRegistry.unregisterSession(username);
                 return session.invalidate();
             });
         };
