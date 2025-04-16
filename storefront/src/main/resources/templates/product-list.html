@@ -81,7 +81,6 @@
 <body>
 
 <div class="top-buttons">
-    <!-- Кнопки для авторизованных пользователей -->
     <div sec:authorize="isAuthenticated()">
         <a href="/carts/actual" class="btn btn-primary">Перейти в корзину</a>
         <a href="/carts/confirm" class="btn btn-success">История заказов</a>
@@ -90,7 +89,6 @@
         </form>
     </div>
 
-    <!-- Кнопка для неавторизованных пользователей -->
     <div sec:authorize="isAnonymous()">
         <a href="/login" class="btn btn-success">Войти</a>
     </div>
@@ -153,11 +151,11 @@
                     </h5>
                     <p class="card-text">Цена: <strong th:text="${product.price} + ' ₽'">1000 ₽</strong></p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <div class="btn-group">
+                        <div sec:authorize="isAuthenticated()" class="btn-group">
                             <button class="btn btn-sm btn-outline-secondary" th:onclick="'addToCart(' + ${product.productId} + ')'">Добавить в корзину</button>
                             <button class="btn btn-sm btn-outline-danger" th:onclick="'removeFromCart(' + ${product.productId} + ')'">Удалить из корзины</button>
                         </div>
-                        <div class="input-group input-group-sm" style="width: 100px;">
+                        <div sec:authorize="isAuthenticated()" class="input-group input-group-sm" style="width: 100px;">
                             <button class="btn btn-outline-secondary"
                                     th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
                             <input type="text" class="form-control text-center" value="1" th:id="'quantity-' + ${product.productId}" readonly="readonly" ></input>

@@ -24,12 +24,12 @@ public class AccountServiceClientImpl implements AccountServiceClient {
 
 
     @Override
-    public Mono<BalanceResponseDto> getBalance(Long accountId) {
+    public Mono<BalanceResponseDto> getBalance(Long accountId, WebSession session) {
             return webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path(accountServiceProperties.getMethods().get("get-getBalance"))
                             .build(accountId))
-                    .exchangeToMono(this::setHeader)
+                    .exchangeToMono(resp -> setHeader(resp, session))
                     .onErrorResume(e -> {
                         if (e instanceof WebClientRequestException) {
                             System.out.println("Ошибка WebClient: " + e.getMessage());
@@ -65,13 +65,12 @@ public class AccountServiceClientImpl implements AccountServiceClient {
                 .bodyToMono(BalanceResponseDto.class);
     }
 
-    private Mono<BalanceResponseDto> setHeader(ClientResponse clientResponse) {
+    private Mono<BalanceResponseDto> setHeader(ClientResponse clientResponse, WebSession session) {
 
-        return Mono.deferContextual(context -> {
-            WebSession session = context.get("webSession");
-            String xVer = clientResponse.headers().asHttpHeaders().getFirst("X-Ver");
-            session.getAttributes().put("X-Ver", xVer);
-            return clientResponse.bodyToMono(BalanceResponseDto.class);
+        return Mono.just(clientResponse).flatMap(resp -> {
+        String xVer = clientResponse.headers().asHttpHeaders().getFirst("X-Ver");
+        session.getAttributes().put("X-Ver", xVer);
+        return clientResponse.bodyToMono(BalanceResponseDto.class);
         });
     }
 }

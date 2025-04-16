@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
 <head>
     <meta charset="UTF-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
@@ -63,7 +64,11 @@
 <body>
 
 <div class="top-buttons">
-    <a href="/carts/actual" class="btn btn-primary">Перейти в корзину</a>
+    <div sec:authorize="isAuthenticated()">
+        <a href="/carts/actual" class="btn btn-primary">Перейти в корзину</a>
+    </div>
+
+    <!-- Кнопка "Продолжить покупки" всегда видна -->
     <a href="/products" class="btn btn-success">Продолжить покупки</a>
 </div>
 
@@ -80,13 +85,13 @@
             <p class="product-description" th:text="${product.description}">Описание товара...</p>
 
             <!-- Кнопки управления корзиной -->
-            <div class="action-buttons">
+            <div sec:authorize="isAuthenticated()" class="action-buttons">
                 <button class="btn btn-primary" th:onclick="'addToCart(' + ${product.productId} + ')'" title="Добавить в корзину">Добавить в корзину</button>
                 <button class="btn btn-danger" th:onclick="'removeFromCart(' + ${product.productId} + ')'" title="Удалить из корзины">Удалить из корзины</button>
             </div>
 
             <!-- Управление количеством -->
-            <div class="quantity-controls">
+            <div sec:authorize="isAuthenticated()" class="quantity-controls">
                 <button class="btn btn-outline-secondary" th:onclick="'decreaseQuantity(' + ${product.productId} + ')'">-</button>
                 <input type="text" class="form-control text-center" style="width: 60px;" value="1" th:id="'quantity-' + ${product.productId}" readonly="readonly"></input>
                 <button class="btn btn-outline-secondary" th:onclick="'increaseQuantity(' + ${product.productId} + ')'">+</button>

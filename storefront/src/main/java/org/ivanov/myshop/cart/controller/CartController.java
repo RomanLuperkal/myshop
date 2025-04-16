@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import org.ivanov.myshop.cart.dto.*;
 import org.ivanov.myshop.cart.service.CartService;
+import org.ivanov.myshop.configuration.security.AccountUserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.result.view.Rendering;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 @Controller
@@ -20,30 +22,34 @@ public class CartController {
 
     @PostMapping("/add")
     @ResponseBody
-    public Mono<CartResponseDto> addToCart(@RequestBody CreateCartDto dto, ServerWebExchange exchange) {
-        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
-        return cartService.addToCart(dto, -1L);
+    public Mono<CartResponseDto> addToCart(@RequestBody CreateCartDto dto, ServerWebExchange exchange,
+                                           Authentication authentication) {
+        Mono<WebSession> session = exchange.getSession();
+        return session.flatMap(s -> cartService.addToCart(dto, getUserId(authentication), s));
     }
 
     @DeleteMapping("/deleteItem")
     @ResponseBody
-    public Mono<CartResponseDto> deleteFromCart(@RequestBody DeleteCartDto dto, ServerWebExchange exchange) {
-        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
-        return cartService.removeFromCart(dto, -1L);
+    public Mono<CartResponseDto> deleteFromCart(@RequestBody DeleteCartDto dto, ServerWebExchange exchange,
+                                                Authentication authentication) {
+        Mono<WebSession> session = exchange.getSession();
+        return session.flatMap(s -> cartService.removeFromCart(dto, getUserId(authentication), s));
     }
 
     @GetMapping("/actual")
-    public Mono<Rendering> getActualCart(ServerWebExchange exchange) {
-        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
-        Rendering r = Rendering.view("cart").modelAttribute("cart", cartService.getActualCart(-1L)).build();
+    public Mono<Rendering> getActualCart(ServerWebExchange exchange, Authentication authentication) {
+        Mono<WebSession> session = exchange.getSession();
+        Rendering r = Rendering.view("cart").modelAttribute("cart",
+                session.flatMap(s -> cartService.getActualCart(getUserId(authentication), s))).build();
         return Mono.just(r);
     }
 
     @DeleteMapping("/deleteProduct/{productId}")
     @ResponseBody
-    public Mono<CartResponseDto> deleteProductFromCart(@PathVariable Long productId, ServerWebExchange exchange) {
-        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
-        return cartService.deleteProductFromCart(productId, -1L);
+    public Mono<CartResponseDto> deleteProductFromCart(@PathVariable Long productId, ServerWebExchange exchange,
+                                                       Authentication authentication) {
+        Mono<WebSession> session = exchange.getSession();
+        return session.flatMap(s -> cartService.deleteProductFromCart(productId, getUserId(authentication), s));
     }
 
     @GetMapping("{cartId}")
@@ -56,19 +62,24 @@ public class CartController {
     @PutMapping("/confirm")
     @ResponseBody
     //TODO проверить работу после интеграции со Spring Security
-    public Mono<Long> confirmCart(ServerWebExchange exchange, @RequestBody ProcessPaymentDto dto) {
-        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
-        dto.setAccountId(-1L);
-        return cartService.confirmCart(dto);
+    public Mono<Long> confirmCart(ServerWebExchange exchange, @RequestBody ProcessPaymentDto dto,
+                                  Authentication authentication) {
+        Mono<WebSession> session = exchange.getSession();
+        dto.setAccountId(getUserId(authentication));
+        return session.flatMap(s -> cartService.confirmCart(dto, s));
     }
 
     @GetMapping("/confirm")
     //TODO проверить работу после интеграции со Spring Security
-    public Mono<Rendering> getConfirmCarts(ServerWebExchange exchange) {
-        String hostAddress = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
-        Mono<ListConfirmCartDto> listConfirmCartDto = cartService.getConfirmCartList(-1L);
+    public Mono<Rendering> getConfirmCarts(ServerWebExchange exchange, Authentication authentication) {
+        Mono<ListConfirmCartDto> listConfirmCartDto = cartService.getConfirmCartList(getUserId(authentication));
         Rendering r = Rendering.view("cart-list").modelAttribute("listConfirmCart", listConfirmCartDto).build();
         return Mono.just(r);
+    }
+
+    private Long getUserId(Authentication authentication) {
+        AccountUserDetails userDetails = (AccountUserDetails) authentication.getPrincipal();
+        return userDetails.getUserId();
     }
 
 }
