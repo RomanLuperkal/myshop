@@ -36,6 +36,21 @@ spring:
     password: ${POSTGRES_PASSWORD}
     change-log: classpath:db/changelog/changelog-master.xml
 
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8082/realms/master # Адрес сервера авторизации для получения токена
+        registration:
+          storefront: # Описание клиента OAuth2
+            provider: keycloak
+            authorizationGrantType: client_credentials
+            client-id: storefront
+            client-secret: N3Z9tfAkERXn0TL2ZjLetVm2rGXgDiak
+            scope: profile
+            clientAuthenticationMethod: client_secret_post # Способ передачи секрета
+
 admin:
   login: ${ADMIN_LOGIN:admin}
   password: ${ADMIN_PASSWORD:1234}

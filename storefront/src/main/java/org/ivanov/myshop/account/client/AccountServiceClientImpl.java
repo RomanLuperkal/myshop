@@ -7,7 +7,13 @@ import org.ivanov.myshop.account.dto.ProcessPaymentDto;
 import org.ivanov.myshop.configuration.AccountServiceProperties;
 import org.ivanov.myshop.handler.exception.CartException;
 import org.ivanov.myshop.handler.response.ApiError;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,14 +27,16 @@ public class AccountServiceClientImpl implements AccountServiceClient {
     private final WebClient webClient;
     private final AccountServiceProperties accountServiceProperties;
     private final ObjectMapper objectMapper;
+    private final ReactiveOAuth2AuthorizedClientManager manager;
 
 
     @Override
     public Mono<BalanceResponseDto> getBalance(Long accountId, WebSession session) {
-            return webClient.get()
+            return getAccessToken().flatMap(accessToken -> webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path(accountServiceProperties.getMethods().get("get-getBalance"))
                             .build(accountId))
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .exchangeToMono(resp -> setHeader(resp, session))
                     .onErrorResume(e -> {
                         if (e instanceof WebClientRequestException) {
@@ -36,15 +44,16 @@ public class AccountServiceClientImpl implements AccountServiceClient {
                             return Mono.just(new BalanceResponseDto());
                         }
                         return Mono.error(new RuntimeException(e.getMessage()));
-                    });
+                    }));
 
     }
 
     @Override
     public Mono<BalanceResponseDto> processOrder(Long xVer, ProcessPaymentDto dto) {
-        return webClient.patch()
+        return getAccessToken().flatMap(accessToken -> webClient.patch()
                 .uri(accountServiceProperties.getMethods().get("patch-processOrder"))
                 .header("X-Ver", xVer.toString())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .bodyValue(dto)
                 .retrieve()
                 .onStatus(
@@ -62,7 +71,7 @@ public class AccountServiceClientImpl implements AccountServiceClient {
                                     }
                                 })
                 )
-                .bodyToMono(BalanceResponseDto.class);
+                .bodyToMono(BalanceResponseDto.class));
     }
 
     private Mono<BalanceResponseDto> setHeader(ClientResponse clientResponse, WebSession session) {
@@ -72,5 +81,13 @@ public class AccountServiceClientImpl implements AccountServiceClient {
         session.getAttributes().put("X-Ver", xVer);
         return clientResponse.bodyToMono(BalanceResponseDto.class);
         });
+    }
+
+    private Mono<String> getAccessToken() {
+        return manager.authorize(OAuth2AuthorizeRequest
+                        .withClientRegistrationId("storefront")
+                        .principal("system")
+                        .build()).map(OAuth2AuthorizedClient::getAccessToken)
+                .map(OAuth2AccessToken::getTokenValue);
     }
 }
