@@ -18,12 +18,12 @@ import java.util.HashSet;
 import java.util.List;
 
 public abstract class CartTestBase {
-    protected final String USER_IP = "127.0.0.1";
+    protected final Long USER_IP = 1L;
     protected CreateCartDto getCreateCartDto() {
         return new CreateCartDto(1L, 1);
     }
 
-    /*protected Context getContext() {
+    protected Context getContext() {
         WebSession webSession = new MockWebSession();
         webSession.getAttributes().put("balance", new BigDecimal("100"));
         webSession.getAttributes().put("paymentServiceAvailable", true);
@@ -72,5 +72,5 @@ public abstract class CartTestBase {
         ConfirmCart confirmCart = new ConfirmCart(1L, LocalDateTime.now(), new BigDecimal("1.5"));
         confirmCarts.add(confirmCart);
         return confirmCarts;
-    }*/
+    }
 }

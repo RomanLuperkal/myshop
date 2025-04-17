@@ -7,6 +7,7 @@ import org.ivanov.myshop.product.service.ProductService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,13 +28,17 @@ public class UserProductController {
 
     @GetMapping
     public Mono<Rendering> getProducts(@RequestParam(defaultValue = "0") int page,
-                                 @RequestParam(defaultValue = "10") int size,
-                                 @RequestParam(required = false) List<String> sort, @RequestParam(required = false) String search) {
+                                       @RequestParam(defaultValue = "10") int size,
+                                       @RequestParam(required = false) List<String> sort, @RequestParam(required = false) String search,
+                                       Authentication auth) {
         Sort sortObj = parseSortParameters(sort);
 
         Pageable pageable = PageRequest.of(page, size, sortObj);
         Mono<ListProductDto> products = productService.getProducts(pageable, search);
-        Rendering r = Rendering.view("product-list").modelAttribute("products", products).build();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+        Rendering r = Rendering.view("product-list").modelAttribute("products", products)
+                .modelAttribute("isAdmin", isAdmin).build();
         return Mono.just(r);
     }
 

@@ -16,6 +16,8 @@ spring:
     user: sa
     password:
     change-log: classpath:db/changelog/changelog-master.xml
+    enabled: false
+
 
   h2:
     console:

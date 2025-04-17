@@ -41,15 +41,15 @@ spring:
       client:
         provider:
           keycloak:
-            issuer-uri: http://localhost:8082/realms/master # Адрес сервера авторизации для получения токена
+            issuer-uri: ${KEYCLOAK_URL:http://localhost:8082}/realms/master
         registration:
-          storefront: # Описание клиента OAuth2
+          storefront:
             provider: keycloak
             authorizationGrantType: client_credentials
             client-id: storefront
-            client-secret: N3Z9tfAkERXn0TL2ZjLetVm2rGXgDiak
+            client-secret: 6kUHHf0Y1vR8bBGcAJhVeOegWhYuQtwY
             scope: profile
-            clientAuthenticationMethod: client_secret_post # Способ передачи секрета
+            clientAuthenticationMethod: client_secret_post
 
 admin:
   login: ${ADMIN_LOGIN:admin}

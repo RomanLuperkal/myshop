@@ -12,4 +12,8 @@
         <sqlFile encoding="UTF-8" path="alter_cart.sql" relativeToChangelogFile="true" endDelimiter=";" splitStatements="true"/>
     </changeSet>
 
+    <changeSet author="Roman" id="insert_admin">
+        <sqlFile encoding="UTF-8" path="insert_admin.sql" relativeToChangelogFile="true" endDelimiter=";" splitStatements="true"/>
+    </changeSet>
+
 </databaseChangeLog>

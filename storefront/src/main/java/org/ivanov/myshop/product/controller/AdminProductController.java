@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.ivanov.myshop.product.dto.ProductCreateDto;
 import org.ivanov.myshop.product.dto.UpdateProductDto;
 import org.ivanov.myshop.product.service.ProductService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +19,13 @@ public class AdminProductController {
     private final ProductService productService;
 
     @GetMapping("products/create")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public Mono<Rendering> createProductForm(@ModelAttribute("product") ProductCreateDto productCreateDto) {
         return Mono.just(Rendering.view("create-product").build());
     }
 
     @PostMapping("products")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public Mono<Rendering> createProduct(@Valid @ModelAttribute("product") ProductCreateDto productCreateDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return Mono.just(Rendering.view("create-product").build());
@@ -32,12 +35,14 @@ public class AdminProductController {
     }
 
     @GetMapping("products")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public Mono<Rendering> getProducts() {
         Rendering r = Rendering.view("admin-product-list")
                 .modelAttribute("products", productService.getProducts()).build();
         return Mono.just(r);
     }
     @GetMapping("products/{productId}/update")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public Mono<Rendering> updateProduct(@PathVariable Long productId, @ModelAttribute("product") UpdateProductDto updateProductDto) {
         updateProductDto.setProductId(productId);
         Rendering r = Rendering.view("update-product").modelAttribute("product", updateProductDto).build();
@@ -45,6 +50,7 @@ public class AdminProductController {
     }
 
     @PostMapping(value = "products/update")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public Mono<Rendering> updateProduct(@Valid @ModelAttribute("product") UpdateProductDto updateProductDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Rendering r = Rendering.view("update-product").build();
@@ -54,6 +60,7 @@ public class AdminProductController {
     }
 
     @DeleteMapping(value = "products/{productId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public Mono<Rendering> deleteProduct(@PathVariable Long productId) {
         return productService.deleteProduct(productId).thenReturn(Rendering.redirectTo("/admin/products").build());
     }

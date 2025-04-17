@@ -94,7 +94,10 @@
     </div>
 </div>
 
-<a href="/login" class="admin-login-button">Войти как администратор</a>
+<div th:if="${isAdmin}">
+    <a href="/admin/products" class="admin-login-button">Панель администратора</a>
+</div>
+
 
 <div class="container mt-4">
     <!-- Строка поиска и фильтрации -->

@@ -1,13 +1,17 @@
 version: '3.8'
+
 services:
   storefront-server:
     build: ./storefront
     image: storefront-image
     container_name: storefront
     depends_on:
-      - myshop-db
-      - redis
-      - keycloak
+      keycloak:
+        condition: service_started
+      myshop-db:
+        condition: service_started
+      redis:
+        condition: service_started
     ports:
       - "8080:8080"
     environment:
@@ -20,14 +24,25 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=admin
       - PAYMENT_URL=http://payment-server:8081
+      - KEYCLOAK_URL=http://keycloak:8082
+    entrypoint: >
+      sh -c "
+        until curl -f http://keycloak:8082/realms/master; do
+          echo 'Waiting for Keycloak to start...';
+          sleep 5;
+        done &&
+        exec java -jar storefront.jar
+      "
 
   payment-server:
     build: ./payment
     image: payment-image
     container_name: payment
     depends_on:
-      - myshop-db
-      - keycloak
+      keycloak:
+        condition: service_started
+      myshop-db:
+        condition: service_started
     ports:
       - "8081:8081"
     environment:
@@ -36,7 +51,15 @@ services:
       - POSTGRES_PASSWORD=admin
       - DB_HOST=myshop-db
       - DB_PORT=5432
-
+      - KEYCLOAK_URL=http://keycloak:8082
+    entrypoint: >
+      sh -c "
+        until curl -f http://keycloak:8082/realms/master; do
+          echo 'Waiting for Keycloak to start...';
+          sleep 5;
+        done &&
+        exec java -jar payment.jar
+      "
 
   myshop-db:
     image: postgres:15.1-alpine
@@ -70,4 +93,7 @@ services:
       - KC_HTTP_PORT=8082
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
-    command: [ "start-dev" ] # Запуск в режиме разработки
+      - KC_HEALTH_ENABLED=true
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    command: ["start-dev", "--import-realm"]
