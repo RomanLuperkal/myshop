@@ -18,7 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public abstract class CartTestBase {
-    protected final Long USER_IP = 1L;
+    protected final Long USER_ID = 1L;
     protected CreateCartDto getCreateCartDto() {
         return new CreateCartDto(1L, 1);
     }
@@ -56,7 +56,7 @@ public abstract class CartTestBase {
         cartItems.setCart(cart);
         cart.setCartId(1L);
         cart.setStatus(Status.CREATED);
-        cart.setAccountId(USER_IP);
+        cart.setAccountId(USER_ID);
         cart.setCreationDate(LocalDateTime.now());
         cart.setOrderedProducts(new HashSet<>(List.of(cartItems)));
         cart.setConfirmedDate(LocalDateTime.now().plusHours(1));

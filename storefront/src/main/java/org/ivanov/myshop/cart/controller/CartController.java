@@ -61,7 +61,6 @@ public class CartController {
 
     @PutMapping("/confirm")
     @ResponseBody
-    //TODO проверить работу после интеграции со Spring Security
     public Mono<Long> confirmCart(ServerWebExchange exchange, @RequestBody ProcessPaymentDto dto,
                                   Authentication authentication) {
         Mono<WebSession> session = exchange.getSession();
@@ -70,7 +69,6 @@ public class CartController {
     }
 
     @GetMapping("/confirm")
-    //TODO проверить работу после интеграции со Spring Security
     public Mono<Rendering> getConfirmCarts(ServerWebExchange exchange, Authentication authentication) {
         Mono<ListConfirmCartDto> listConfirmCartDto = cartService.getConfirmCartList(getUserId(authentication));
         Rendering r = Rendering.view("cart-list").modelAttribute("listConfirmCart", listConfirmCartDto).build();
